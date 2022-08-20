@@ -1,0 +1,31 @@
+name: ecloud-auto-sign-in
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  watch:
+    types: started
+  schedule:
+    - cron: 1 0 * * *
+
+jobs:
+  ecloud:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: 'setup python'
+      uses: actions/setup-python@master
+      with: 
+        python-version: 3.7
+      
+    - name: requirements
+      run: |
+        pip3 install -r requirements.txt
+        
+    - name: Checkin
+      run: |
+        python3 ecloud.py
