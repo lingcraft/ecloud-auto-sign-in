@@ -1,13 +1,14 @@
-name: ecloud
+name: 天翼云盘自动签到
 
 on:
   push:
+    branches:
+      - master
   schedule:
     - cron: 5 0 * * *
-  workflow_dispatch:
 
 jobs:
-  ecloud:
+  签到:
     runs-on: ubuntu-latest
 
     steps:
