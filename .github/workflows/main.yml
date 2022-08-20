@@ -2,30 +2,24 @@ name: ecloud
 
 on:
   push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
-  watch:
-    types: started
   schedule:
-    - cron: 1 0 * * *
+    - cron: 5 0 * * *
+  workflow_dispatch:
 
 jobs:
   ecloud:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@master
+        with:
+          python-version: 3.7
 
-    - name: 'setup python'
-      uses: actions/setup-python@master
-      with: 
-        python-version: 3.7
-      
-    - name: requirements
-      run: |
-        pip3 install -r requirements.txt
-        
-    - name: sign in
-      run: |
-        python3 ecloud.py
+      - name: 安装依赖
+        run: |
+          pip3 install -r requirements.txt
+
+      - name: 开始签到
+        run: |
+          python3 ecloud.py
