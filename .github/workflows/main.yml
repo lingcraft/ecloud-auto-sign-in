@@ -10,6 +10,7 @@ jobs:
     env:
       USERNAME: ${{ secrets.USERNAME }}
       PASSWΟRD: ${{ secrets.PASSWΟRD }}
+      PUSHER_WECHAT: ${{ secrets.PUSHER_WECHAT }}
     runs-on: ubuntu-latest
     steps:
       - name: 拉取代码

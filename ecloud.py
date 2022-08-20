@@ -8,7 +8,7 @@ username = os.getenv("USERNAME")
 password = os.getenv("PASSWORD")
 
 # 企业微信推送参数
-pusher_wechat = os.getenv("pushER_WECHAT").split(",")
+pusher_wechat = os.getenv("PUSHER_WECHAT").split(",")
 corp_id = pusher_wechat[0]
 corp_secret = pusher_wechat[1]
 to_user = pusher_wechat[2]
