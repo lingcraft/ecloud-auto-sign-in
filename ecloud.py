@@ -27,13 +27,13 @@ sio.write("-----------" + time_now + "----------\n")
 def main():
     if username == "" or password == "":
         sio.write('签到失败：用户名或密码为空，请设置\n')
-        description = sio.getvalue()
-        push_wechat(description)
+        desc = sio.getvalue()
+        push_wechat(desc)
         return None
     msg = login(username, password)
     if msg == "error":
-        description = sio.getvalue()
-        push_wechat(description)
+        desc = sio.getvalue()
+        push_wechat(desc)
         return None
     else:
         pass
@@ -87,9 +87,9 @@ def main():
     else:
         prizeName = response.json()['prizeName']
         sio.write(f"第二次抽奖：抽奖获得{prizeName}\n")
-    description = sio.getvalue()
-    push_wechat(description)
-    return description
+    desc = sio.getvalue()
+    push_wechat(desc)
+    return desc
 
 
 BI_RM = list("0123456789abcdefghijklmnopqrstuvwxyz")
