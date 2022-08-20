@@ -7,6 +7,9 @@ from io import StringIO
 username = os.getenv("USERNAME")
 password = os.getenv("PASSWORD")
 
+print(username)
+print(password)
+
 # 企业微信推送参数
 pusher_wechat = os.getenv("PUSHER_WECHAT").split(",")
 corp_id = pusher_wechat[0]
