@@ -4,14 +4,14 @@ from io import StringIO
 # 天翼云盘每日签到1次，抽奖2次
 
 # 账号
-username = os.getenv("USERNAME")
-password = os.getenv("PASSWORD")
+username = os.getenv("USER", "")
+password = os.getenv("PWD", "")
 
 print(username)
 print(password)
 
 # 企业微信推送参数
-pusher_wechat = os.getenv("PUSHER_WECHAT").split(",")
+pusher_wechat = os.getenv("PUSHER_WECHAT", "").split(",")
 corp_id = pusher_wechat[0]
 corp_secret = pusher_wechat[1]
 to_user = pusher_wechat[2]
