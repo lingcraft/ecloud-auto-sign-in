@@ -10,7 +10,7 @@ jobs:
   sign-in:
     env:
       USERNAME: ${{ secrets.USERNAME }}
-      PASSWORD: ${{ secrets.PWD }}
+      PASSWORD: ${{ secrets.PASSWORD }}
       PUSHER_WECHAT: ${{ secrets.PUSHER_WECHAT }}
     runs-on: ubuntu-latest
     steps:
