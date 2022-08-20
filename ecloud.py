@@ -9,9 +9,6 @@ password = os.getenv("PASSWORD")
 
 # 企业微信推送参数
 pusher_wechat = os.getenv("PUSHER_WECHAT").split(",")
-print(username)
-print(password)
-print(pusher_wechat)
 corp_id = pusher_wechat[0]
 corp_secret = pusher_wechat[1]
 to_user = pusher_wechat[2]
@@ -57,15 +54,6 @@ def main():
         sio.write(f"签到提示：未签到，签到获得{bonus}M空间\n")
     else:
         sio.write(f"签到提示：已经签到过了，签到获得{bonus}M空间\n")
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Linux; Android 5.1.1; SM-G930K Build/NRD90M; wv) AppleWebKit/537.36 (KHTML, '
-                      'like Gecko) Version/4.0 Chrome/74.0.3729.136 Mobile Safari/537.36 Ecloud/8.6.3 Android/22 '
-                      'clientId/355325117317828 clientModel/SM-G930K imsi/460071114317824 clientChannelId/qq '
-                      'proVersion/1.0.6',
-        "Referer": "https://m.cloud.189.cn/zhuanti/2016/sign/index.jsp?albumBackupOpened=1",
-        "Host": "m.cloud.189.cn",
-        "Accept-Encoding": "gzip, deflate",
-    }
     # 第一次抽奖
     response = session.get(url, headers=headers)
     if "errorCode" in response.text:
