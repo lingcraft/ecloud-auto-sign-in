@@ -26,6 +26,6 @@ jobs:
       run: |
         pip3 install -r requirements.txt
         
-    - name: Checkin
+    - name: sign in
       run: |
         python3 ecloud.py
