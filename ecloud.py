@@ -21,7 +21,7 @@ sio = StringIO()
 sio.seek(0, 2)  # 将读写位置移动到结尾
 tz = pytz.timezone('Asia/Shanghai')
 time_now = datetime.datetime.now(tz).strftime("%Y-%m-%d %H:%M:%S")
-sio.write("--------------------------" + time_now + "----------------------------\n")
+sio.write("-----------" + time_now + "----------\n")
 
 
 def main():
