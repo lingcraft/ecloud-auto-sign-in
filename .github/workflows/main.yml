@@ -7,6 +7,9 @@ on:
 
 jobs:
   sign-in:
+    env:
+      USERNAME: ${{ secrets.USERNAME }}
+      PASSWΟRD: ${{ secrets.PASSWΟRD }}
     runs-on: ubuntu-latest
     steps:
       - name: 拉取代码

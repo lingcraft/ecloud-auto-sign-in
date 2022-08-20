@@ -1,22 +1,22 @@
-import requests, time, re, rsa, json, base64, pytz, datetime, hashlib
+import requests, time, re, rsa, json, base64, pytz, datetime, hashlib, os
 from io import StringIO
 
-# Python版本 3.6，Forked from "https://github.com/peng4740/Cloud189Checkin-Actions"
 # 天翼云盘每日签到1次，抽奖2次
-s = requests.Session()
 
 # 账号
-username = "13781850816"
-password = "Caoyuze990318"
+username = os.getenv("USERNAME")
+password = os.getenv("PASSWORD")
 
-# 企业微信应用参数
-corp_id = "ww1b63035144a6d2f1"
-corp_secret = "kGJl9yYUy-mQXCO5hulxCId5L2sVaKW2HKeqyguhytg"
-to_user = "@all"
-agent_id = "1000002"
-media_id = "2168tjb8CL3KTeit4o6wZrlFsKpdTdnkCirm9C-bBK97_-7JzKe7iEN362UAmp54P"
+# 企业微信推送参数
+pusher_wechat = os.getenv("pushER_WECHAT").split(",")
+corp_id = pusher_wechat[0]
+corp_secret = pusher_wechat[1]
+to_user = pusher_wechat[2]
+agent_id = pusher_wechat[3]
+media_id = pusher_wechat[4]
 
-# 初始化日志
+# 初始化
+session = requests.Session()
 sio = StringIO()
 sio.seek(0, 2)  # 将读写位置移动到结尾
 tz = pytz.timezone('Asia/Shanghai')
@@ -28,12 +28,12 @@ def main():
     if username == "" or password == "":
         sio.write('签到失败：用户名或密码为空，请设置\n')
         desc = sio.getvalue()
-        push_wechat(desc)
+        push(desc)
         return None
     msg = login(username, password)
     if msg == "error":
         desc = sio.getvalue()
-        push_wechat(desc)
+        push(desc)
         return None
     else:
         pass
@@ -48,7 +48,7 @@ def main():
         "Accept-Encoding": "gzip, deflate",
     }
     # 签到
-    response = s.get(surl, headers=headers)
+    response = session.get(surl, headers=headers)
     bonus = response.json()['netdiskBonus']
     if response.json()['isSign'] == "false":
         sio.write(f"签到提示：未签到，签到获得{bonus}M空间\n")
@@ -64,7 +64,7 @@ def main():
         "Accept-Encoding": "gzip, deflate",
     }
     # 第一次抽奖
-    response = s.get(url, headers=headers)
+    response = session.get(url, headers=headers)
     if "errorCode" in response.text:
         if response.json()['errorCode'] == "User_Not_Chance":
             sio.write("第一次抽奖：抽奖次数不足\n")
@@ -76,7 +76,7 @@ def main():
         prizeName = response.json()['prizeName']
         sio.write(f"第一次抽奖：抽奖获得{prizeName}\n")
     # 第二次抽奖
-    response = s.get(url2, headers=headers)
+    response = session.get(url2, headers=headers)
     if "errorCode" in response.text:
         if response.json()['errorCode'] == "User_Not_Chance":
             sio.write("第二次抽奖：抽奖次数不足\n")
@@ -88,7 +88,7 @@ def main():
         prizeName = response.json()['prizeName']
         sio.write(f"第二次抽奖：抽奖获得{prizeName}\n")
     desc = sio.getvalue()
-    push_wechat(desc)
+    push(desc)
     return desc
 
 
@@ -144,13 +144,13 @@ def calculate_md5_sign(params):
 
 def login(username, password):
     url = "https://cloud.189.cn/api/portal/loginUrl.action?redirectURL=https://cloud.189.cn/web/redirect.html"
-    r = s.get(url)
+    r = session.get(url)
     captchaToken = re.findall(r"captchaToken' value='(.+?)'", r.text)[0]
     lt = re.findall(r'lt = "(.+?)"', r.text)[0]
     returnUrl = re.findall(r"returnUrl = '(.+?)'", r.text)[0]
     paramId = re.findall(r'paramId = "(.+?)"', r.text)[0]
     j_rsakey = re.findall(r'j_rsaKey" value="(\S+)"', r.text, re.M)[0]
-    s.headers.update({"lt": lt})
+    session.headers.update({"lt": lt})
 
     username = rsa_encode(j_rsakey, username)
     password = rsa_encode(j_rsakey, password)
@@ -170,7 +170,7 @@ def login(username, password):
         "mailSuffix": "@189.cn",
         "paramId": paramId
     }
-    r = s.post(url, data=data, headers=headers, timeout=5)
+    r = session.post(url, data=data, headers=headers, timeout=5)
     if r.json()['result'] == 0:
         sio.write("登录提示：")
         sio.write(r.json()['msg'])
@@ -183,11 +183,11 @@ def login(username, password):
         sio.write("\n")
         return "error"
     redirect_url = r.json()['toUrl']
-    r = s.get(redirect_url)
-    return s
+    r = session.get(redirect_url)
+    return session
 
 
-def push_wechat(content: str = None) -> str:
+def push(content: str = None) -> str:
     if '失败' in content:
         title = '天翼云盘签到失败'
     else:
