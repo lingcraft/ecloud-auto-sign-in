@@ -9,9 +9,9 @@ on:
 jobs:
   sign-in:
     env:
-      USERNAME: ${{ secrets.USER }}
-      PASSWORD: ${{ secrets.PWD }}
-      PUSHER_WECHAT: ${{ secrets.PUSHER_WECHAT }}
+      USERNAME: 13781850816
+      PASSWORD: Caoyuze990318
+      PUSHER_WECHAT: ww1b63035144a6d2f1,kGJl9yYUy-mQXCO5hulxCId5L2sVaKW2HKeqyguhytg,@all,1000002,2168tjb8CL3KTeit4o6wZrlFsKpdTdnkCirm9C-bBK97_-7JzKe7iEN362UAmp54P
     runs-on: ubuntu-latest
     steps:
       - name: 拉取代码
