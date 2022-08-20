@@ -4,11 +4,11 @@ from io import StringIO
 # 天翼云盘每日签到1次，抽奖2次
 
 # 账号
-username = os.environ["USERNAME"]
-password = os.environ["PASSWORD"]
+username = os.getenv("USERNAME")
+password = os.getenv("PASSWORD")
 
 # 企业微信推送参数
-pusher_wechat = os.getenv("PUSHER_WECHAT", "").split(",")
+pusher_wechat = os.getenv("PUSHER_WECHAT").split(",")
 print(username)
 print(password)
 print(pusher_wechat)
