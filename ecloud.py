@@ -7,11 +7,11 @@ from io import StringIO
 username = os.environ["USERNAME"]
 password = os.environ["PASSWORD"]
 
-print(username)
-print(password)
-
 # 企业微信推送参数
 pusher_wechat = os.getenv("PUSHER_WECHAT", "").split(",")
+print(username)
+print(password)
+print(pusher_wechat)
 corp_id = pusher_wechat[0]
 corp_secret = pusher_wechat[1]
 to_user = pusher_wechat[2]
