@@ -73,8 +73,8 @@ def main():
             sio.write(response.text)
             sio.write("\n")
     else:
-        prizeName = response.json()['prizeName']
-        sio.write(f"第一次抽奖：抽奖获得{prizeName}\n")
+        prize = response.json()['prizeName']
+        sio.write(f"第一次抽奖：抽奖获得{prize}\n")
     # 第二次抽奖
     response = session.get(url2, headers=headers)
     if "errorCode" in response.text:
@@ -85,8 +85,8 @@ def main():
             sio.write(response.text)
             sio.write("\n")
     else:
-        prizeName = response.json()['prizeName']
-        sio.write(f"第二次抽奖：抽奖获得{prizeName}\n")
+        prize = response.json()['prizeName']
+        sio.write(f"第二次抽奖：抽奖获得{prize}\n")
     desc = sio.getvalue()
     push(desc)
     return desc
