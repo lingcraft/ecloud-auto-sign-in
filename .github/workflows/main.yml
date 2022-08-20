@@ -9,8 +9,8 @@ on:
 jobs:
   sign-in:
     env:
-      USER: ${{ secrets.USER }}
-      PWD: ${{ secrets.PWD }}
+      USERNAME: ${{ secrets.USER }}
+      PASSWORD: ${{ secrets.PWD }}
       PUSHER_WECHAT: ${{ secrets.PUSHER_WECHAT }}
     runs-on: ubuntu-latest
     steps:

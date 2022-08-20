@@ -4,8 +4,8 @@ from io import StringIO
 # 天翼云盘每日签到1次，抽奖2次
 
 # 账号
-username = os.getenv("USER", "")
-password = os.getenv("PWD", "")
+username = os.environ["USERNAME"]
+password = os.environ["PASSWORD"]
 
 print(username)
 print(password)
