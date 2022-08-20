@@ -1,4 +1,4 @@
-name: ecloud-auto-sign-in
+name: ecloud
 
 on:
   push:
