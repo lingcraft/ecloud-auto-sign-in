@@ -94,8 +94,8 @@ def login(username, password):
     j_rsakey = re.findall(r'j_rsaKey" value="(\S+)"', r.text, re.M)[0]
     session.headers.update({"lt": lt})
     encoder = Encoder()
-    username = encoder.rsa_encode(j_rsakey, username)
-    password = encoder.rsa_encode(j_rsakey, password)
+    username_rsa = encoder.rsa_encode(j_rsakey, username)
+    password_rsa = encoder.rsa_encode(j_rsakey, password)
     url = "https://open.e.189.cn/api/logbox/oauth2/loginSubmit.do"
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:74.0) Gecko/20100101 Firefox/76.0",
@@ -104,8 +104,8 @@ def login(username, password):
     data = {
         "appKey": "cloud",
         "accountType": "01",
-        "userName": f"{{RSA}}{username}",
-        "password": f"{{RSA}}{password}",
+        "userName": f"{{RSA}}{username_rsa}",
+        "password": f"{{RSA}}{password_rsa}",
         "validateCode": "",
         "captchaToken": captchaToken,
         "returnUrl": returnUrl,
