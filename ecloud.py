@@ -1,145 +1,101 @@
-import requests, time, re, rsa, json, base64, pytz, datetime, hashlib, os
-from io import StringIO
+import base64, datetime, hashlib, io, json, os, pytz, re, requests, rsa, time
 
-# 天翼云盘每日签到1次，抽奖2次
+# 天翼云盘每日签到1次，抽奖3次
 
 # 账号
 username = os.getenv("USERNAME")
 password = os.getenv("PASSWORD")
 
 # 企业微信推送参数
-corp_id, corp_secret, to_user, agent_id, media_id = os.getenv("PUSHER_WECHAT").split(",")
+pusher_params = os.getenv("PUSHER_WECHAT").split(",")
 
 # 初始化
 session = requests.Session()
-sio = StringIO()
-sio.seek(0, 2)  # 将读写位置移动到结尾
-tz = pytz.timezone("Asia/Shanghai")
-time_now = datetime.datetime.now(tz).strftime("%Y-%m-%d %H:%M:%S")
-sio.write("-----------" + time_now + "----------\n")
+sio = io.StringIO()
+sio.seek(0, 2)
+now = datetime.datetime.now(pytz.timezone("Asia/Shanghai")).strftime("%Y-%m-%d %H:%M:%S")
+sio.write("-----------" + now + "----------\n")
 
 
 def main():
+    pusher = WeChat(pusher_params)
     if username == "" or password == "":
         sio.write("签到失败：用户名或密码为空，请设置\n")
         desc = sio.getvalue()
-        push(desc)
+        pusher.push(desc)
         return None
     msg = login(username, password)
-    if msg == "error":
+    if msg is None:
         desc = sio.getvalue()
-        push(desc)
+        pusher.push(desc)
         return None
-    else:
-        pass
     rand = str(round(time.time() * 1000))
-    surl = f"https://api.cloud.189.cn/mkt/userSign.action?rand={rand}&clientType=TELEANDROID&version=8.6.3&model=SM-G930K"
-    url = f"https://m.cloud.189.cn/v2/drawPrizeMarketDetails.action?taskId=TASK_SIGNIN&activityId=ACT_SIGNIN"
-    url2 = f"https://m.cloud.189.cn/v2/drawPrizeMarketDetails.action?taskId=TASK_SIGNIN_PHOTOS&activityId=ACT_SIGNIN"
+    urls = [
+        f"https://api.cloud.189.cn/mkt/userSign.action?rand={rand}&clientType=TELEANDROID&version=8.6.3&model=SM-G930K",
+        f"https://m.cloud.189.cn/v2/drawPrizeMarketDetails.action?taskId=TASK_SIGNIN&activityId=ACT_SIGNIN",
+        f"https://m.cloud.189.cn/v2/drawPrizeMarketDetails.action?taskId=TASK_SIGNIN_PHOTOS&activityId=ACT_SIGNIN",
+        f"https://m.cloud.189.cn/v2/drawPrizeMarketDetails.action?taskId=TASK_2022_FLDFS_KJ&activityId=ACT_SIGNIN"
+    ]
     headers = {
         "User-Agent": "Mozilla/5.0 (Linux; Android 5.1.1; SM-G930K Build/NRD90M; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/74.0.3729.136 Mobile Safari/537.36 Ecloud/8.6.3 Android/22 clientId/355325117317828 clientModel/SM-G930K imsi/460071114317824 clientChannelId/qq proVersion/1.0.6",
         "Referer": "https://m.cloud.189.cn/zhuanti/2016/sign/index.jsp?albumBackupOpened=1",
         "Host": "m.cloud.189.cn",
         "Accept-Encoding": "gzip, deflate",
     }
-    # 签到
-    response = session.get(surl, headers=headers)
-    bonus = response.json()["netdiskBonus"]
-    if response.json()["isSign"] == "false":
-        sio.write(f"签到提示：未签到，签到获得{bonus}M空间\n")
-    else:
-        sio.write(f"签到提示：已经签到过了，签到获得{bonus}M空间\n")
-    # 第一次抽奖
-    response = session.get(url, headers=headers)
-    if "errorCode" in response.text:
-        if response.json()["errorCode"] == "User_Not_Chance":
-            sio.write("第一次抽奖：抽奖次数不足\n")
+    # 签到、抽奖
+    for i in range(len(urls)):
+        url = urls[i]
+        response = session.get(url, headers=headers)
+        if i == 0:
+            bonus = response.json()["netdiskBonus"]
+            if response.json()["isSign"] == "false":
+                sio.write(f"签到提示：签到获得{bonus}M空间\n")
+            else:
+                sio.write(f"签到提示：已签到，签到获得{bonus}M空间\n")
         else:
-            sio.write("第一次抽奖失败\n")
-            sio.write(response.text)
-            sio.write("\n")
-    else:
-        prize = response.json()["prizeName"]
-        sio.write(f"第一次抽奖：抽奖获得{prize}\n")
-    # 第二次抽奖
-    response = session.get(url2, headers=headers)
-    if "errorCode" in response.text:
-        if response.json()["errorCode"] == "User_Not_Chance":
-            sio.write("第二次抽奖：抽奖次数不足\n")
-        else:
-            sio.write("第二次抽奖失败\n")
-            sio.write(response.text)
-            sio.write("\n")
-    else:
-        prize = response.json()["prizeName"]
-        sio.write(f"第二次抽奖：抽奖获得{prize}\n")
+            if "errorCode" in response.text:
+                if response.json()["errorCode"] == "User_Not_Chance":
+                    sio.write(f"第{i}次抽奖：抽奖失败，次数不足\n")
+                else:
+                    sio.write(f"第{i}次抽奖失败\n")
+                    sio.write(response.text)
+                    sio.write("\n")
+            else:
+                bonus = response.json()["prizeName"]
+                sio.write(f"第{i}次抽奖：抽奖成功，获得{bonus}\n")
     desc = sio.getvalue()
-    push(desc)
+    pusher.push(desc)
     return desc
 
 
-BI_RM = list("0123456789abcdefghijklmnopqrstuvwxyz")
-
-
-def int2char(a):
-    return BI_RM[a]
-
-
-b64map = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
-
-
-def b64tohex(a):
-    d = ""
-    e = 0
-    c = 0
-    for i in range(len(a)):
-        if list(a)[i] != "=":
-            v = b64map.index(list(a)[i])
-            if 0 == e:
-                e = 1
-                d += int2char(v >> 2)
-                c = 3 & v
-            elif 1 == e:
-                e = 2
-                d += int2char(c << 2 | v >> 4)
-                c = 15 & v
-            elif 2 == e:
-                e = 3
-                d += int2char(c)
-                d += int2char(v >> 2)
-                c = 3 & v
-            else:
-                e = 0
-                d += int2char(c << 2 | v >> 4)
-                d += int2char(15 & v)
-    if e == 1:
-        d += int2char(c << 2)
-    return d
-
-
-def rsa_encode(j_rsakey, string):
-    rsa_key = f"-----BEGIN PUBLIC KEY-----\n{j_rsakey}\n-----END PUBLIC KEY-----"
-    pubkey = rsa.PublicKey.load_pkcs1_openssl_pem(rsa_key.encode())
-    result = b64tohex((base64.b64encode(rsa.encrypt(f"{string}".encode(), pubkey))).decode())
-    return result
-
-
-def calculate_md5_sign(params):
-    return hashlib.md5("&".join(sorted(params.split("&"))).encode("utf-8")).hexdigest()
-
-
 def login(username, password):
-    url = "https://cloud.189.cn/api/portal/loginUrl.action?redirectURL=https://cloud.189.cn/web/redirect.html"
+    url = "https://m.cloud.189.cn/udb/udb_login.jsp?pageId=1&pageKey=default&clientType=wap&redirectURL=https://m.cloud.189.cn/zhuanti/2021/shakeLottery/index.html"
     r = session.get(url)
+    pattern = r"https?://[^\s'\"]+"
+    match = re.search(pattern, r.text)
+    if match:
+        url = match.group()
+    else:
+        sio.write("没有找到url\n")
+        return None
+    r = session.get(url)
+    pattern = r"<a id=\"j-tab-login-link\"[^>]*href=\"([^\"]+)\""
+    match = re.search(pattern, r.text)
+    if match:
+        href = match.group(1)
+    else:
+        sio.write("没有找到href链接\n")
+        return None
+    r = session.get(href)
     captchaToken = re.findall(r"captchaToken' value='(.+?)'", r.text)[0]
-    lt = re.findall(r"lt = \"(.+?)\"", r.text)[0]
-    returnUrl = re.findall(r"returnUrl = '(.+?)'", r.text)[0]
-    paramId = re.findall(r"paramId = \"(.+?)\"", r.text)[0]
-    j_rsakey = re.findall(r"j_rsaKey\" value=\"(\S+)\"", r.text, re.M)[0]
+    lt = re.findall(r'lt = "(.+?)"', r.text)[0]
+    returnUrl = re.findall(r"returnUrl= '(.+?)'", r.text)[0]
+    paramId = re.findall(r'paramId = "(.+?)"', r.text)[0]
+    j_rsakey = re.findall(r'j_rsaKey" value="(\S+)"', r.text, re.M)[0]
     session.headers.update({"lt": lt})
-
-    username = rsa_encode(j_rsakey, username)
-    password = rsa_encode(j_rsakey, password)
+    encoder = Encoder()
+    username = encoder.rsa_encode(j_rsakey, username)
+    password = encoder.rsa_encode(j_rsakey, password)
     url = "https://open.e.189.cn/api/logbox/oauth2/loginSubmit.do"
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:74.0) Gecko/20100101 Firefox/76.0",
@@ -167,35 +123,74 @@ def login(username, password):
         sio.write("错误提示：\n")
         sio.write(msg)
         sio.write("\n")
-        return "error"
+        return None
     redirect_url = r.json()["toUrl"]
     r = session.get(redirect_url)
     return session
 
 
-def push(content: str = None) -> str:
-    if "失败" in content:
-        title = "天翼云盘签到失败"
-    else:
-        title = "天翼云盘签到成功"
-    wx = WeChat(corp_id, corp_secret, agent_id)
-    if media_id is not None:
-        response = wx.send_mpnews(title, content, media_id, to_user)
-    else:
-        message = title + "\n" + content
-        response = wx.send_text(message, to_user)
-    return response
+class Encoder:
+    def rsa_encode(self, j_rsakey, string):
+        rsa_key = f"-----BEGIN PUBLIC KEY-----\n{j_rsakey}\n-----END PUBLIC KEY-----"
+        pubkey = rsa.PublicKey.load_pkcs1_openssl_pem(rsa_key.encode())
+        result = self.b64tohex((base64.b64encode(rsa.encrypt(f"{string}".encode(), pubkey))).decode())
+        return result
+
+    def b64tohex(self, a):
+        d = ""
+        e = 0
+        c = 0
+        for i in range(len(a)):
+            if list(a)[i] != "=":
+                v = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/".index(list(a)[i])
+                if 0 == e:
+                    e = 1
+                    d += self.int2char(v >> 2)
+                    c = 3 & v
+                elif 1 == e:
+                    e = 2
+                    d += self.int2char(c << 2 | v >> 4)
+                    c = 15 & v
+                elif 2 == e:
+                    e = 3
+                    d += self.int2char(c)
+                    d += self.int2char(v >> 2)
+                    c = 3 & v
+                else:
+                    e = 0
+                    d += self.int2char(c << 2 | v >> 4)
+                    d += self.int2char(15 & v)
+        if e == 1:
+            d += self.int2char(c << 2)
+        return d
+
+    def int2char(self, a):
+        return list("0123456789abcdefghijklmnopqrstuvwxyz")[a]
 
 
 class WeChat:
-    def __init__(self, corpid, corpsecret, agentid) -> None:
-        self.corpid = corpid
-        self.corpsecret = corpsecret
-        self.agentid = agentid
+    def __init__(self, params) -> None:
+        self.corp_id = params[0]
+        self.corp_secret = params[1]
+        self.to_user = params[2]
+        self.agent_id = params[3]
+        self.media_id = params[4]
+
+    def push(self, content: str = None) -> str:
+        if "失败" in content:
+            title = "天翼云盘签到失败"
+        else:
+            title = "天翼云盘签到成功"
+        if self.media_id is not None:
+            response = self.send_news(title, content)
+        else:
+            message = title + "\n" + content
+            response = self.send_text(message)
+        return response
 
     def get_token(self) -> str:
-        url = "https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid={}&corpsecret={}".format(self.corpid,
-                                                                                            self.corpsecret)
+        url = "https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid={}&corpsecret={}".format(self.corp_id,
+                                                                                            self.corp_secret)
         response = requests.get(url)
         if response.status_code == 200:
             return response.json()["access_token"]
@@ -203,34 +198,34 @@ class WeChat:
             # log("Failed to get access_token.", level="error")
             return ""
 
-    def send_text(self, message, touser="@all") -> str:
+    def send_text(self, message) -> str:
         url = "https://qyapi.weixin.qq.com/cgi-bin/message/send?access_token={}".format(self.get_token())
         data = {
-            "touser": touser,
+            "touser": self.to_user,
             "msgtype": "text",
-            "agentid": self.agentid,
+            "agentid": self.agent_id,
             "text": {
                 "content": message
             },
             "safe": 0
         }
-        send_msges = (bytes(json.dumps(data), "utf-8"))
-        response = requests.post(url, send_msges)
+        msg = (bytes(json.dumps(data), "utf-8"))
+        response = requests.post(url, msg)
         return response
 
-    def send_mpnews(self, title, message, media_id, touser="@all") -> str:
+    def send_news(self, title, message) -> str:
         url = "https://qyapi.weixin.qq.com/cgi-bin/message/send?access_token={}".format(self.get_token())
         if not message:
             message = title
         data = {
-            "touser": touser,
+            "touser": self.to_user,
             "msgtype": "mpnews",
-            "agentid": self.agentid,
+            "agentid": self.agent_id,
             "mpnews": {
                 "articles": [
                     {
                         "title": title,
-                        "thumb_media_id": media_id,
+                        "thumb_media_id": self.media_id,
                         "content_source_url": "",
                         "content": message.replace("\n", "<br/>"),
                         "digest": message,
@@ -239,8 +234,8 @@ class WeChat:
             },
             "safe": 0
         }
-        send_msges = (bytes(json.dumps(data), "utf-8"))
-        response = requests.post(url, send_msges)
+        msg = (bytes(json.dumps(data), "utf-8"))
+        response = requests.post(url, msg)
         return response
 
 
