@@ -49,13 +49,13 @@ def main():
         if i == 0:
             bonus = response.json()["netdiskBonus"]
             if response.json()["isSign"] == "false":
-                sio.write(f"签到提示：签到成功，获得{bonus}M空间\n")
+                sio.write(f"签到提示：签到成功，获得天翼云盘{bonus}M空间\n")
             else:
-                sio.write(f"签到提示：已签到，获得{bonus}M空间\n")
+                sio.write(f"签到提示：已签到，获得天翼云盘{bonus}M空间\n")
         else:
             if "errorCode" in response.text:
                 if response.json()["errorCode"] == "User_Not_Chance":
-                    sio.write(f"第{i}次抽奖：抽奖失败，次数不足\n")
+                    sio.write(f"第{i}次抽奖：已抽奖，获得天翼云盘50M空间\n")
                 else:
                     sio.write(f"第{i}次抽奖失败\n")
                     sio.write(response.text)
