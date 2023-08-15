@@ -7,7 +7,7 @@ username = os.getenv("USERNAME")
 password = os.getenv("PASSWORD")
 
 # 企业微信推送参数
-pusher_params = os.getenv("PUSHER_WECHAT").split(",")
+wechat_params = os.getenv("PUSHER_WECHAT").split(",")
 
 # 初始化
 session = requests.Session()
@@ -18,7 +18,7 @@ sio.write("-----------" + now + "----------\n")
 
 
 def main():
-    pusher = WeChat(pusher_params)
+    pusher = WeChat(wechat_params)
     if username == "" or password == "":
         sio.write("签到失败：用户名或密码为空，请设置\n")
         desc = sio.getvalue()
