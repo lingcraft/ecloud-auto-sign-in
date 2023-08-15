@@ -1,4 +1,4 @@
-import base64, datetime, hashlib, io, json, os, pytz, re, requests, rsa, time
+import base64, datetime, io, json, os, pytz, re, requests, rsa, time
 
 # 天翼云盘每日签到1次，抽奖3次
 
@@ -49,9 +49,9 @@ def main():
         if i == 0:
             bonus = response.json()["netdiskBonus"]
             if response.json()["isSign"] == "false":
-                sio.write(f"签到提示：签到获得{bonus}M空间\n")
+                sio.write(f"签到提示：签到成功，获得{bonus}M空间\n")
             else:
-                sio.write(f"签到提示：已签到，签到获得{bonus}M空间\n")
+                sio.write(f"签到提示：已签到，获得{bonus}M空间\n")
         else:
             if "errorCode" in response.text:
                 if response.json()["errorCode"] == "User_Not_Chance":
@@ -195,7 +195,6 @@ class WeChat:
         if response.status_code == 200:
             return response.json()["access_token"]
         else:
-            # log("Failed to get access_token.", level="error")
             return ""
 
     def send_text(self, message) -> str:
