@@ -1,4 +1,4 @@
-import base64, datetime, io, json, pytz, re, requests, rsa, time
+import base64, datetime, io, json, os, pytz, re, requests, rsa, time
 
 # 天翼云盘每日签到1次，抽奖3次
 
@@ -55,14 +55,14 @@ def main():
         else:
             if "errorCode" in response.text:
                 if response.json()["errorCode"] == "User_Not_Chance":
-                    sio.write(f"第{i}次抽奖：已抽奖，获得50M空间\n")
+                    sio.write(f"第{i}次抽奖提示：已抽奖，获得50M空间\n")
                 else:
-                    sio.write(f"第{i}次抽奖失败\n")
+                    sio.write(f"第{i}次抽奖提示：抽奖失败\n")
                     sio.write(response.text)
                     sio.write("\n")
             else:
                 bonus = response.json()["prizeName"].replace("天翼云盘", "")
-                sio.write(f"第{i}次抽奖：抽奖成功，获得{bonus}\n")
+                sio.write(f"第{i}次抽奖提示：抽奖成功，获得{bonus}\n")
     desc = sio.getvalue()
     pusher.push(desc)
     return desc
