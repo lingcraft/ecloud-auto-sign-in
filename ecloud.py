@@ -1,4 +1,4 @@
-import base64, datetime, io, json, os, pytz, re, requests, rsa, time
+import base64, datetime, io, json, pytz, re, requests, rsa, time
 
 # 天翼云盘每日签到1次，抽奖3次
 
