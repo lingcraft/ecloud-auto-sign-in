@@ -48,7 +48,7 @@ def main():
         response = session.get(url, headers=headers)
         if i == 0:
             bonus = response.json()["netdiskBonus"]
-            if response.json()["isSign"] == "false":
+            if not response.json()["isSign"]:
                 sio.write(f"签到提示：签到成功，获得{bonus}M空间\n")
             else:
                 sio.write(f"签到提示：已签到，获得{bonus}M空间\n")
