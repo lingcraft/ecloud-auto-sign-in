@@ -63,6 +63,7 @@ def main():
             else:
                 bonus = response.json()["prizeName"].replace("天翼云盘", "")
                 sio.write(f"第{i}次抽奖提示：抽奖成功，获得{bonus}\n")
+        time.sleep(random.randint(5, 10))
     desc = sio.getvalue()
     pusher.push(desc)
     return desc
