@@ -68,7 +68,7 @@ def main():
     session.get("https://mifan.61.com/api/v1/login", params=params)
     response = session.get("https://mifan.61.com/api/v1/event/dailysign/", params=params)
     print(response.text)
-    sio.write("米饭签到提示：" + json.loads(response.text)["data"])
+    sio.write(f"米饭签到提示：{json.loads(response.text)["data"]}")
     pusher.push(sio.getvalue())
 
 
