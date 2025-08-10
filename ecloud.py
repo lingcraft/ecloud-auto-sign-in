@@ -9,7 +9,7 @@ wechat_params = os.getenv("PUSHER_WECHAT").split(",")
 session = requests.Session()
 sio = io.StringIO()
 sio.seek(0, 2)
-现在 = datetime.datetime.now(pytz.timezone("Asia/Shanghai")).strftime("%Y-%m-%d %H:%M:%S")
+now = datetime.datetime.now(pytz.timezone("Asia/Shanghai")).strftime("%Y-%m-%d %H:%M:%S")
 sio.write("-----------" + now + "----------\n")
 
 
