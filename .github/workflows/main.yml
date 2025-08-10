@@ -1,9 +1,10 @@
 name: 天翼云盘自动签到
 
 on:
-  workflow_dispatch:
+  push:
   schedule:
     - cron: 0/5 * * * *
+  workflow_dispatch:
 
 jobs:
   sign-in:
