@@ -18,7 +18,6 @@ sio.write("-----------" + now + "----------\n")
 
 
 def main():
-    print(os.getenv("SCRECTS")["ECLOUD_ACCOUNT"])
     pusher = WeChat(wechat_params)
     # 天翼云盘签到
     username, password = ecloud_account
