@@ -1,10 +1,6 @@
 import base64, datetime, io, json, os, pytz, random, re, requests, rsa, time
 
-# 天翼云盘每日签到1次，抽奖3次
-
-# 账号
-username = os.getenv("USERNAME")
-password = os.getenv("PASSWORD")
+# 天翼云盘每日签到1次，抽奖3次；摩尔庄园米饭签到
 
 # 企业微信推送参数
 wechat_params = os.getenv("PUSHER_WECHAT").split(",")
@@ -13,21 +9,17 @@ wechat_params = os.getenv("PUSHER_WECHAT").split(",")
 session = requests.Session()
 sio = io.StringIO()
 sio.seek(0, 2)
-now = datetime.datetime.now(pytz.timezone("Asia/Shanghai")).strftime("%Y-%m-%d %H:%M:%S")
+现在 = datetime.datetime.now(pytz.timezone("Asia/Shanghai")).strftime("%Y-%m-%d %H:%M:%S")
 sio.write("-----------" + now + "----------\n")
 
 
 def main():
     pusher = WeChat(wechat_params)
-    if username == "" or password == "":
-        sio.write("签到失败：用户名或密码为空，请设置\n")
-        desc = sio.getvalue()
-        pusher.push(desc)
-        return None
+    # 天翼云盘签到
+    username, password = os.getenv("ECLOUD_ACCOUNT").split(",")
     msg = login(username, password)
     if msg is None:
-        desc = sio.getvalue()
-        pusher.push(desc)
+        pusher.push(sio.getvalue())
         return None
     rand = str(round(time.time() * 1000))
     urls = [
@@ -42,7 +34,6 @@ def main():
         "Host": "m.cloud.189.cn",
         "Accept-Encoding": "gzip, deflate",
     }
-    # 签到、抽奖
     for i in range(len(urls)):
         url = urls[i]
         response = session.get(url, headers=headers)
@@ -64,9 +55,16 @@ def main():
                 bonus = response.json()["prizeName"].replace("天翼云盘", "")
                 sio.write(f"第{i}次抽奖提示：抽奖成功，获得{bonus}\n")
         time.sleep(random.randint(5, 10))
-    desc = sio.getvalue()
-    pusher.push(desc)
-    return desc
+    # 摩尔庄园签到
+    username, password = os.getenv("MOLE_ACCOUNT").split(",")
+    params = {
+        "uid": username,
+        "password": password
+    }
+    session.get("https://mifan.61.com/api/v1/login", params=params)
+    response = session.get("https://mifan.61.com/api/v1/event/dailysign/", params=params)
+    sio.write(f"米饭签到提示：{json.loads(response.text)["data"]}")
+    pusher.push(sio.getvalue())
 
 
 def login(username, password):
@@ -114,11 +112,7 @@ def login(username, password):
         "paramId": paramId
     }
     r = session.post(url, data=data, headers=headers, timeout=5)
-    if r.json()["result"] == 0:
-        sio.write("登录提示：")
-        sio.write(r.json()["msg"])
-        sio.write("\n")
-    else:
+    if r.json()["result"] != 0:
         msg = r.json()["msg"]
         sio.write("签到失败：登录出错\n")
         sio.write("错误提示：\n")
