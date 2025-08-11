@@ -1,4 +1,4 @@
-name: 天翼云盘自动签到
+name: ecloud-auto-sign-in
 
 on:
   push:
