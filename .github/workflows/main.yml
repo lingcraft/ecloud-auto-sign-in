@@ -2,8 +2,8 @@ name: 天翼云盘自动签到
 
 on:
   push:
-  # schedule:
-  #   - cron: 0 16 * * *
+  schedule:
+    - cron: 45 15 * * *
   # workflow_dispatch 要放最后，否则会导致 schedule 失效
   workflow_dispatch:
 
