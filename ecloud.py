@@ -34,6 +34,7 @@ def main():
         "Host": "m.cloud.189.cn",
         "Accept-Encoding": "gzip, deflate",
     }
+    is_signed_ecloud, is_signed_mole = False, False
     for i in range(len(urls)):
         url = urls[i]
         response = session.get(url, headers=headers)
@@ -42,6 +43,7 @@ def main():
             if not response.json()["isSign"]:
                 sio.write(f"签到提示：签到成功，获得{bonus}M空间\n")
             else:
+                is_signed_ecloud = True
                 sio.write(f"签到提示：已签到，获得{bonus}M空间\n")
         else:
             if "errorCode" in response.text:
@@ -63,8 +65,11 @@ def main():
     }
     session.get("https://mifan.61.com/api/v1/login", params=params)
     response = session.get("https://mifan.61.com/api/v1/event/dailysign/", params=params)
-    sio.write(f"米饭签到提示：{json.loads(response.text)["data"]}")
-    pusher.push(sio.getvalue())
+    data = json.loads(response.text)["data"]
+    is_signed_mole = "已" in data
+    sio.write(f"米饭签到提示：{data}")
+    if not (is_signed_ecloud and is_signed_mole):
+        pusher.push(sio.getvalue())
 
 
 def login(username, password):
