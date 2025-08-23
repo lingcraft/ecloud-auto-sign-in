@@ -2,15 +2,15 @@ name: 天翼云盘自动签到
 
 on:
   push:
-  schedule:
-    - cron: 0 16 * * *
-  workflow_dispatch:
+  # schedule:
+  #   - cron: 0 16 * * *
+  workflow_dispatch: # workflow_dispatch 要放最后，否则会导致 schedule 失效
 
 jobs:
   sign-in:
     env:
-      USERNAME: ${{ secrets.USERNAME }}
-      PASSWORD: ${{ secrets.PASSWORD }}
+      ECLOUD_ACCOUNT: ${{ secrets.ECLOUD_ACCOUNT }}
+      MOLE_ACCOUNT: ${{ secrets.MOLE_ACCOUNT }}
       PUSHER_WECHAT: ${{ secrets.PUSHER_WECHAT }}
     runs-on: ubuntu-latest
     steps:
@@ -19,7 +19,7 @@ jobs:
       - name: 安装环境
         uses: actions/setup-python@master
         with:
-          python-version: 3.8
+          python-version: 3.13
       - name: 安装依赖
         run: |
           pip3 install -r requirements.txt

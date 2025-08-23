@@ -2,6 +2,10 @@ import base64, datetime, io, json, os, pytz, random, re, requests, rsa, time
 
 # 天翼云盘每日签到1次，抽奖3次；摩尔庄园米饭签到
 
+# 账号
+ecloud_account = os.getenv("ECLOUD_ACCOUNT").split(",")
+mole_account = os.getenv("MOLE_ACCOUNT").split(",")
+
 # 企业微信推送参数
 wechat_params = os.getenv("PUSHER_WECHAT").split(",")
 
@@ -16,7 +20,7 @@ sio.write("-----------" + now + "----------\n")
 def main():
     pusher = WeChat(wechat_params)
     # 天翼云盘签到
-    username, password = os.getenv("ECLOUD_ACCOUNT").split(",")
+    username, password = ecloud_account
     msg = login(username, password)
     if msg is None:
         pusher.push(sio.getvalue())
@@ -58,7 +62,7 @@ def main():
                 sio.write(f"第{i}次抽奖提示：抽奖成功，获得{bonus}\n")
         time.sleep(random.randint(5, 10))
     # 摩尔庄园签到
-    username, password = os.getenv("MOLE_ACCOUNT").split(",")
+    username, password = mole_account
     params = {
         "uid": username,
         "password": password
