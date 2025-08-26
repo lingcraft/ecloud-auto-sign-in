@@ -39,8 +39,7 @@ def main():
         "Accept-Encoding": "gzip, deflate",
     }
     is_signed_ecloud, is_signed_mole = False, False
-    for i in range(len(urls)):
-        url = urls[i]
+    for i, url in enumerate(urls):
         response = session.get(url, headers=headers)
         # 签到
         if i == 0:
@@ -49,19 +48,15 @@ def main():
                 sio.write(f"签到提示：签到成功，获得{bonus}M空间\n")
             else:
                 is_signed_ecloud = True
-                sio.write(f"签到提示：已签到，获得{bonus}M空间\n")
         # 抽奖
         else:
-            if "errorCode" in response.text:
-                if response.json()["errorCode"] == "User_Not_Chance":
-                    sio.write(f"第{i}次抽奖提示：已抽奖，获得50M空间\n")
-                else:
-                    sio.write(f"第{i}次抽奖提示：抽奖失败\n")
-                    sio.write(response.text)
-                    sio.write("\n")
-            else:
+            if "errorCode" not in response.text:
                 bonus = response.json()["prizeName"].replace("天翼云盘", "")
                 sio.write(f"第{i}次抽奖提示：抽奖成功，获得{bonus}\n")
+            elif response.json()["errorCode"] != "User_Not_Chance":
+                sio.write(f"第{i}次抽奖提示：抽奖失败\n")
+                sio.write(response.text)
+                sio.write("\n")
         time.sleep(random.randint(5, 10))
     # 摩尔庄园签到
     username, password = mole_account
