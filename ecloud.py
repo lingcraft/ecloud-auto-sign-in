@@ -28,9 +28,9 @@ def main():
     rand = str(round(time.time() * 1000))
     urls = [
         f"https://api.cloud.189.cn/mkt/userSign.action?rand={rand}&clientType=TELEANDROID&version=8.6.3&model=SM-G930K",
-        f"https://m.cloud.189.cn/v2/drawPrizeMarketDetails.action?taskId=TASK_SIGNIN&activityId=ACT_SIGNIN",
-        f"https://m.cloud.189.cn/v2/drawPrizeMarketDetails.action?taskId=TASK_SIGNIN_PHOTOS&activityId=ACT_SIGNIN",
-        f"https://m.cloud.189.cn/v2/drawPrizeMarketDetails.action?taskId=TASK_2022_FLDFS_KJ&activityId=ACT_SIGNIN"
+        f"https://m.cloud.189.cn/v2/drawPrizeMarketDetails.action?taskId=TASK_SIGNIN&activityId=ACT_SIGNIN"
+        # f"https://m.cloud.189.cn/v2/drawPrizeMarketDetails.action?taskId=TASK_SIGNIN_PHOTOS&activityId=ACT_SIGNIN",
+        # f"https://m.cloud.189.cn/v2/drawPrizeMarketDetails.action?taskId=TASK_2022_FLDFS_KJ&activityId=ACT_SIGNIN"
     ]
     headers = {
         "User-Agent": "Mozilla/5.0 (Linux; Android 5.1.1; SM-G930K Build/NRD90M; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/74.0.3729.136 Mobile Safari/537.36 Ecloud/8.6.3 Android/22 clientId/355325117317828 clientModel/SM-G930K imsi/460071114317824 clientChannelId/qq proVersion/1.0.6",
@@ -42,6 +42,7 @@ def main():
     for i in range(len(urls)):
         url = urls[i]
         response = session.get(url, headers=headers)
+        # 签到
         if i == 0:
             bonus = response.json()["netdiskBonus"]
             if not response.json()["isSign"]:
@@ -49,6 +50,7 @@ def main():
             else:
                 is_signed_ecloud = True
                 sio.write(f"签到提示：已签到，获得{bonus}M空间\n")
+        # 抽奖
         else:
             if "errorCode" in response.text:
                 if response.json()["errorCode"] == "User_Not_Chance":
@@ -72,8 +74,9 @@ def main():
     data = json.loads(response.text)["data"]
     is_signed_mole = "已" in data
     sio.write(f"米饭签到提示：{data}")
-    if not (is_signed_ecloud and is_signed_mole):
+    if not is_signed_ecloud or not is_signed_mole:
         pusher.push(sio.getvalue())
+    return None
 
 
 def login(username, password):
