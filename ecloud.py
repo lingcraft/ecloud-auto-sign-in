@@ -13,7 +13,7 @@ wechat_params = os.getenv("PUSHER_WECHAT").split(",")
 session = requests.Session()
 sio = io.StringIO()
 sio.seek(0, 2)
-now = datetime.datetime.now(pytz.timezone("Asia/Shanghai")).strftime("%Y-%m-%d %H:%M:%S")
+现在 = datetime.datetime.now(pytz.timezone("Asia/Shanghai")).strftime("%Y-%m-%d %H:%M:%S")
 sio.write("-----------" + now + "----------\n")
 
 
@@ -68,7 +68,7 @@ def main():
     response = session.get("https://mifan.61.com/api/v1/event/dailysign/", params=params)
     data = json.loads(response.text)["data"]
     is_signed_mole = "已" in data
-    sio.write(f"米饭签到提示：{data}")
+    sio.write(f"米饭签到提示：{data}，获得24金豆")
     if not is_signed_ecloud or not is_signed_mole:
         pusher.push(sio.getvalue())
     return None
