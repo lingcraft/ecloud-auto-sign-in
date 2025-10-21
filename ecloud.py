@@ -2,12 +2,10 @@ import base64, datetime, io, json, os, pytz, random, re, requests, rsa, time
 
 # 天翼云盘每日签到1次，抽奖3次；摩尔庄园米饭签到
 
-# 账号
-ecloud_account = os.getenv("ECLOUD_ACCOUNT").split(",")
-mole_account = os.getenv("MOLE_ACCOUNT").split(",")
-
-# 企业微信推送参数
+# 微信推送参数、账号
 wechat_params = os.getenv("PUSHER_WECHAT").split(",")
+ecloud_account = os.getenv("ECLOUD_ACCOUNT").split(",")
+mole_accounts = os.getenv("MOLE_ACCOUNT").split("\n")
 
 # 初始化
 session = requests.Session()
@@ -38,7 +36,7 @@ def main():
         "Host": "m.cloud.189.cn",
         "Accept-Encoding": "gzip, deflate",
     }
-    is_signed_ecloud, is_signed_mole = False, False
+    ecloud_sign_success, mole_sign_success = False, False
     for i, url in enumerate(urls):
         response = session.get(url, headers=headers)
         # 签到
@@ -46,8 +44,7 @@ def main():
             bonus = response.json()["netdiskBonus"]
             if not response.json()["isSign"]:
                 sio.write(f"签到提示：签到成功，获得{bonus}M空间\n")
-            else:
-                is_signed_ecloud = True
+                ecloud_sign_success = True
         # 抽奖
         else:
             if "errorCode" not in response.text:
@@ -59,17 +56,20 @@ def main():
                 sio.write("\n")
         time.sleep(random.randint(5, 10))
     # 摩尔庄园签到
-    username, password = mole_account
-    params = {
-        "uid": username,
-        "password": password
-    }
-    session.get("https://mifan.61.com/api/v1/login", params=params)
-    response = session.get("https://mifan.61.com/api/v1/event/dailysign/", params=params)
-    data = json.loads(response.text)["data"]
-    is_signed_mole = "已" in data
-    sio.write(f"米饭签到提示：{data}，获得24金豆")
-    if not is_signed_ecloud or not is_signed_mole:
+    for mole_account in mole_accounts:
+        username, password = mole_account.split(",")
+        params = {
+            "uid": username,
+            "password": password
+        }
+        session.get("https://mifan.61.com/api/v1/login", params=params)
+        response = session.get("https://mifan.61.com/api/v1/event/dailysign/", params=params)
+        data = json.loads(response.text)["data"]
+        if "成功" in data:
+            mole_sign_success = True
+    if mole_sign_success:
+        sio.write("米饭签到提示：签到成功，获得24金豆")
+    if ecloud_sign_success or mole_sign_success:
         pusher.push(sio.getvalue())
     return None
 
@@ -171,14 +171,10 @@ class Encoder:
 
 
 class WeChat:
-    def __init__(self, params) -> None:
-        self.corp_id = params[0]
-        self.corp_secret = params[1]
-        self.to_user = params[2]
-        self.agent_id = params[3]
-        self.media_id = params[4]
+    def __init__(self, params):
+        self.corp_id, self.corp_secret, self.to_user, self.agent_id, self.media_id = params
 
-    def push(self, content: str = None) -> str:
+    def push(self, content: str = None):
         if "失败" in content:
             title = "天翼云盘签到失败"
         else:
@@ -190,7 +186,7 @@ class WeChat:
             response = self.send_text(message)
         return response
 
-    def get_token(self) -> str:
+    def get_token(self):
         url = "https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid={}&corpsecret={}".format(self.corp_id,
                                                                                             self.corp_secret)
         response = requests.get(url)
@@ -199,7 +195,7 @@ class WeChat:
         else:
             return ""
 
-    def send_text(self, message) -> str:
+    def send_text(self, message):
         url = "https://qyapi.weixin.qq.com/cgi-bin/message/send?access_token={}".format(self.get_token())
         data = {
             "touser": self.to_user,
@@ -214,7 +210,7 @@ class WeChat:
         response = requests.post(url, msg)
         return response
 
-    def send_news(self, title, message) -> str:
+    def send_news(self, title, message):
         url = "https://qyapi.weixin.qq.com/cgi-bin/message/send?access_token={}".format(self.get_token())
         if not message:
             message = title
