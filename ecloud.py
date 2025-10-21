@@ -92,15 +92,15 @@ def login(username, password):
         sio.write("没有找到href链接\n")
         return None
     r = session.get(href)
-    captchaToken = re.findall(r"captchaToken' value='(.+?)'", r.text)[0]
+    captcha_token = re.findall(r"captchaToken' value='(.+?)'", r.text)[0]
     lt = re.findall(r'lt = "(.+?)"', r.text)[0]
-    returnUrl = re.findall(r"returnUrl= '(.+?)'", r.text)[0]
-    paramId = re.findall(r'paramId = "(.+?)"', r.text)[0]
-    j_rsakey = re.findall(r'j_rsaKey" value="(\S+)"', r.text, re.M)[0]
+    return_url = re.findall(r"returnUrl= '(.+?)'", r.text)[0]
+    param_id = re.findall(r'paramId = "(.+?)"', r.text)[0]
+    j_rsa_key = re.findall(r'j_rsaKey" value="(\S+)"', r.text, re.M)[0]
     session.headers.update({"lt": lt})
     encoder = Encoder()
-    username_rsa = encoder.rsa_encode(j_rsakey, username)
-    password_rsa = encoder.rsa_encode(j_rsakey, password)
+    username_rsa = encoder.rsa_encode(j_rsa_key, username)
+    password_rsa = encoder.rsa_encode(j_rsa_key, password)
     url = "https://open.e.189.cn/api/logbox/oauth2/loginSubmit.do"
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:74.0) Gecko/20100101 Firefox/76.0",
@@ -112,10 +112,10 @@ def login(username, password):
         "userName": f"{{RSA}}{username_rsa}",
         "password": f"{{RSA}}{password_rsa}",
         "validateCode": "",
-        "captchaToken": captchaToken,
-        "returnUrl": returnUrl,
+        "captchaToken": captcha_token,
+        "returnUrl": return_url,
         "mailSuffix": "@189.cn",
-        "paramId": paramId
+        "paramId": param_id
     }
     r = session.post(url, data=data, headers=headers, timeout=5)
     if r.json()["result"] != 0:
@@ -131,8 +131,8 @@ def login(username, password):
 
 
 class Encoder:
-    def rsa_encode(self, j_rsakey, string):
-        rsa_key = f"-----BEGIN PUBLIC KEY-----\n{j_rsakey}\n-----END PUBLIC KEY-----"
+    def rsa_encode(self, j_rsa_key, string):
+        rsa_key = f"-----BEGIN PUBLIC KEY-----\n{j_rsa_key}\n-----END PUBLIC KEY-----"
         pubkey = rsa.PublicKey.load_pkcs1_openssl_pem(rsa_key.encode())
         result = self.b64tohex((base64.b64encode(rsa.encrypt(f"{string}".encode(), pubkey))).decode())
         return result
