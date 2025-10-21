@@ -22,7 +22,7 @@ def main():
     msg = login(username, password)
     if msg is None:
         pusher.push(sio.getvalue())
-        return None
+        return
     rand = str(round(time.time() * 1000))
     urls = [
         f"https://api.cloud.189.cn/mkt/userSign.action?rand={rand}&clientType=TELEANDROID&version=8.6.3&model=SM-G930K",
@@ -71,7 +71,6 @@ def main():
         sio.write("米饭签到提示：签到成功，获得24金豆")
     if ecloud_sign_success or mole_sign_success:
         pusher.push(sio.getvalue())
-    return None
 
 
 def login(username, password):
