@@ -1,9 +1,9 @@
-from os import getenv
+import os
 from pusher import *
 
 # 摩尔庄园米饭签到
-wechat_params = getenv("WECHAT_PARAMS").split(",")
-mole_accounts = getenv("MOLE_ACCOUNTS").split("\n")
+wechat_params = os.getenv("WECHAT_PARAMS").split(",")
+mole_accounts = os.getenv("MOLE_ACCOUNTS").split("\n")
 
 
 def main():
