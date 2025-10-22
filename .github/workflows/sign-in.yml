@@ -1,4 +1,4 @@
-name: 摩尔庄园签到
+name: 签到
 
 on:
   push:
@@ -7,10 +7,11 @@ on:
   workflow_dispatch: # workflow_dispatch 要放最后，否则会导致 schedule 失效
 
 jobs:
-  mole:
+  sign-in:
     env:
       WECHAT_PARAMS: ${{ secrets.WECHAT_PARAMS }}
       MOLE_ACCOUNTS: ${{ secrets.MOLE_ACCOUNTS }}
+      ECLOUD_ACCOUNT: ${{ secrets.ECLOUD_ACCOUNT }}
     runs-on: ubuntu-latest
     steps:
       - name: 拉取代码
@@ -22,6 +23,9 @@ jobs:
       - name: 安装依赖
         run: |
           pip3 install -r requirements.txt
-      - name: 开始签到
+      - name: 开始摩尔庄园签到
         run: |
           python3 mole.py
+      - name: 开始天翼云盘签到
+        run: |
+          python3 ecloud.py
