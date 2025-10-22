@@ -36,15 +36,13 @@ def main():
         "Host": "m.cloud.189.cn",
         "Accept-Encoding": "gzip, deflate",
     }
-    ecloud_sign_success, mole_sign_success = False, False
     for i, url in enumerate(urls):
         response = session.get(url, headers=headers)
         # 签到
         if i == 0:
             bonus = response.json()["netdiskBonus"]
-            if not response.json()["isSign"]:
-                sio.write(f"天翼云盘签到提示：签到成功，获得{bonus}M空间\n")
-                ecloud_sign_success = True
+            success = not response.json()["isSign"]
+            sio.write(f"天翼云盘签到提示：{"签到成功" if success else "已签到"}，获得{bonus}M空间\n")
         # 抽奖
         else:
             if "errorCode" not in response.text:
@@ -65,11 +63,8 @@ def main():
         session.get("https://mifan.61.com/api/v1/login", params=params)
         response = session.get("https://mifan.61.com/api/v1/event/dailysign/", params=params)
         data = json.loads(response.text)["data"]
-        if "成功" in data:
-            sio.write(f"摩尔签到提示：{username}签到成功，获得24金豆")
-            mole_sign_success = True
-    if ecloud_sign_success or mole_sign_success:
-        pusher.push(sio.getvalue())
+        sio.write(f"摩尔签到提示：{username}{data}，获得24金豆\n")
+    pusher.push(sio.getvalue())
 
 
 def login(username, password):
