@@ -62,6 +62,7 @@ def main():
             "uid": username,
             "password": password
         }
+        print(params)
         session.get("https://mifan.61.com/api/v1/login", params=params)
         response = session.get("https://mifan.61.com/api/v1/event/dailysign/", params=params)
         data = json.loads(response.text)["data"]
