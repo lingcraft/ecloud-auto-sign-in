@@ -43,15 +43,15 @@ def main():
         if i == 0:
             bonus = response.json()["netdiskBonus"]
             if not response.json()["isSign"]:
-                sio.write(f"签到提示：签到成功，获得{bonus}M空间\n")
+                sio.write(f"天翼云盘签到提示：签到成功，获得{bonus}M空间\n")
                 ecloud_sign_success = True
         # 抽奖
         else:
             if "errorCode" not in response.text:
                 bonus = response.json()["prizeName"].replace("天翼云盘", "")
-                sio.write(f"第{i}次抽奖提示：抽奖成功，获得{bonus}\n")
+                sio.write(f"天翼云盘抽奖第{i}次提示：抽奖成功，获得{bonus}\n")
             elif response.json()["errorCode"] != "User_Not_Chance":
-                sio.write(f"第{i}次抽奖提示：抽奖失败\n")
+                sio.write(f"天翼云盘抽奖第{i}次提示：抽奖失败\n")
                 sio.write(response.text)
                 sio.write("\n")
         time.sleep(random.randint(5, 10))
@@ -62,14 +62,12 @@ def main():
             "uid": username,
             "password": password
         }
-        print(params)
         session.get("https://mifan.61.com/api/v1/login", params=params)
         response = session.get("https://mifan.61.com/api/v1/event/dailysign/", params=params)
         data = json.loads(response.text)["data"]
         if "成功" in data:
+            sio.write(f"摩尔签到提示：{username}签到成功，获得24金豆")
             mole_sign_success = True
-    if mole_sign_success:
-        sio.write("米饭签到提示：签到成功，获得24金豆")
     if ecloud_sign_success or mole_sign_success:
         pusher.push(sio.getvalue())
 
@@ -176,9 +174,9 @@ class WeChat:
 
     def push(self, content: str = None):
         if "失败" in content:
-            title = "天翼云盘签到失败"
+            title = "签到失败"
         else:
-            title = "天翼云盘签到成功"
+            title = "签到成功"
         if self.media_id is not None:
             response = self.send_news(title, content)
         else:
