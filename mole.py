@@ -1,6 +1,5 @@
 from os import getenv
 from pusher import *
-import env
 
 # 摩尔庄园米饭签到
 wechat_params = getenv("WECHAT_PARAMS").split(",")

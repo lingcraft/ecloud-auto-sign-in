@@ -1,4 +1,6 @@
-import base64, datetime, io, json, os, pytz, random, re, requests, rsa, time
+import base64, random, re, rsa, time
+from os import getenv
+from pusher import *
 
 # 天翼云盘签到1次，抽奖3次
 wechat_params = getenv("WECHAT_PARAMS").split(",")
