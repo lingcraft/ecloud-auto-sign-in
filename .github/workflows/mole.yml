@@ -1,4 +1,4 @@
-name: 天翼云盘自动签到
+name: 摩尔庄园签到
 
 on:
   push:
@@ -9,9 +9,8 @@ on:
 jobs:
   sign-in:
     env:
-      ECLOUD_ACCOUNT: ${{ secrets.ECLOUD_ACCOUNT }}
-      MOLE_ACCOUNT: ${{ secrets.MOLE_ACCOUNT }}
-      PUSHER_WECHAT: ${{ secrets.PUSHER_WECHAT }}
+      WECHAT_PARAMS: ${{ secrets.WECHAT_PARAMS }}
+      MOLE_ACCOUNTS: ${{ secrets.MOLE_ACCOUNTS }}
     runs-on: ubuntu-latest
     steps:
       - name: 拉取代码
@@ -25,4 +24,4 @@ jobs:
           pip3 install -r requirements.txt
       - name: 开始签到
         run: |
-          python3 ecloud.py
+          python3 mole.py
