@@ -1,9 +1,10 @@
-import base64, random, re, rsa, time, os
+import base64, os, random, re, rsa, time
 from pusher import *
 
 # 天翼云盘签到1次，抽奖3次
 wechat_params = os.getenv("WECHAT_PARAMS").split(",")
 ecloud_account = os.getenv("ECLOUD_ACCOUNT").split(",")
+session = requests.Session()
 
 
 class Encoder:

@@ -4,7 +4,6 @@ sio = io.StringIO()
 sio.seek(0, 2)
 now = datetime.datetime.now(pytz.timezone("Asia/Shanghai")).strftime("%Y-%m-%d %H:%M:%S")
 sio.write("-----------" + now + "----------\n")
-session = requests.Session()
 
 
 class WeChat:
