@@ -22,10 +22,10 @@ jobs:
           python-version: 3.13
       - name: 安装依赖
         run: |
-          pip3 install -r requirements.txt
+          pip install -r requirements.txt
       - name: 开始摩尔庄园签到
         run: |
-          python3 mole.py
+          python mole.py
       - name: 开始天翼云盘签到
         run: |
-          python3 ecloud.py
+          python ecloud.py
