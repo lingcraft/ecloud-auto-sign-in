@@ -17,7 +17,7 @@ jobs:
       - name: 拉取代码
         uses: actions/checkout@v5
       - name: 安装环境
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: 3.13
       - name: 安装依赖
