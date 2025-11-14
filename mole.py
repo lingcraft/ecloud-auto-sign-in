@@ -20,8 +20,8 @@ def main():
                 "password": password
             }
             try:
-                session.get("https://mifan.61.com/api/v1/login", params=params)
-                response = session.get("https://mifan.61.com/api/v1/event/dailysign/", params=params)
+                session.get("https://mifan.61.com/api/v1/login", params=params, timeout=5)
+                response = session.get("https://mifan.61.com/api/v1/event/dailysign/", params=params, timeout=5)
                 data = response.json().get("data")
                 sio.write(f"摩尔签到提示：{username} {data}，获得24金豆\n")
                 if "成功" in data:
