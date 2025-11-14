@@ -1,3 +1,5 @@
+urllib3
+loguru
 requests
 rsa
 pytz

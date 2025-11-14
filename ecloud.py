@@ -1,4 +1,7 @@
 import base64, os, random, re, rsa, time
+from requests.adapters import HTTPAdapter
+from urllib3.util import Retry
+from loguru import logger
 from pusher import *
 
 # 天翼云盘签到1次，抽奖3次
@@ -48,28 +51,28 @@ class Encoder:
 
 def login(username, password):
     url = "https://m.cloud.189.cn/udb/udb_login.jsp?pageId=1&pageKey=default&clientType=wap&redirectURL=https://m.cloud.189.cn/zhuanti/2021/shakeLottery/index.html"
-    r = session.get(url)
+    response = session.get(url)
     pattern = r"https?://[^\s'\"]+"
-    match = re.search(pattern, r.text)
+    match = re.search(pattern, response.text)
     if match:
         url = match.group()
     else:
         sio.write("没有找到url\n")
         return None
-    r = session.get(url)
+    response = session.get(url)
     pattern = r"<a id=\"j-tab-login-link\"[^>]*href=\"([^\"]+)\""
-    match = re.search(pattern, r.text)
+    match = re.search(pattern, response.text)
     if match:
         href = match.group(1)
     else:
         sio.write("没有找到href链接\n")
         return None
-    r = session.get(href)
-    captcha_token = re.findall(r"captchaToken' value='(.+?)'", r.text)[0]
-    lt = re.findall(r'lt = "(.+?)"', r.text)[0]
-    return_url = re.findall(r"returnUrl= '(.+?)'", r.text)[0]
-    param_id = re.findall(r'paramId = "(.+?)"', r.text)[0]
-    j_rsa_key = re.findall(r'j_rsaKey" value="(\S+)"', r.text, re.M)[0]
+    response = session.get(href)
+    captcha_token = re.findall(r"captchaToken' value='(.+?)'", response.text)[0]
+    lt = re.findall(r'lt = "(.+?)"', response.text)[0]
+    return_url = re.findall(r"returnUrl= '(.+?)'", response.text)[0]
+    param_id = re.findall(r'paramId = "(.+?)"', response.text)[0]
+    j_rsa_key = re.findall(r'j_rsaKey" value="(\S+)"', response.text, re.M)[0]
     session.headers.update({"lt": lt})
     encoder = Encoder()
     username_rsa = encoder.rsa_encode(j_rsa_key, username)
@@ -90,17 +93,15 @@ def login(username, password):
         "mailSuffix": "@189.cn",
         "paramId": param_id
     }
-    r = session.post(url, data=data, headers=headers, timeout=5)
-    if r.json()["result"] != 0:
-        msg = r.json()["msg"]
-        sio.write("签到失败：登录出错\n")
-        sio.write("错误提示：\n")
-        sio.write(msg)
-        sio.write("\n")
+    response = session.post(url, data=data, headers=headers, timeout=5)
+    if response.json()["result"] == 0:
+        redirect_url = response.json()["toUrl"]
+        response = session.get(redirect_url)
+        return response
+    else:
+        msg = response.json()["msg"]
+        sio.write(f"签到失败：登录出错\n错误提示：\n{msg}\n")
         return None
-    redirect_url = r.json()["toUrl"]
-    r = session.get(redirect_url)
-    return session
 
 
 def main():
@@ -124,24 +125,36 @@ def main():
         "Host": "m.cloud.189.cn",
         "Accept-Encoding": "gzip, deflate",
     }
+    retry = Retry(
+        total=5,
+        status_forcelist=[429, 500, 502, 503, 504],
+        allowed_methods=["GET"]
+    )
+    adapter = HTTPAdapter(max_retries=retry)
+    session.mount('https://', adapter)
     success = False
     for i, url in enumerate(urls):
-        response = session.get(url, headers=headers)
-        # 签到
-        if i == 0:
-            bonus = response.json()["netdiskBonus"]
-            success = not response.json()["isSign"]
-            sio.write(f"签到提示：{"签到成功" if success else "已签到"}，获得{bonus}M空间\n")
-        # 抽奖
-        else:
-            if "errorCode" not in response.text:
-                bonus = response.json()["prizeName"].replace("天翼云盘", "")
-                sio.write(f"抽奖第{i}次提示：抽奖成功，获得{bonus}\n")
-            elif response.json()["errorCode"] != "User_Not_Chance":
-                sio.write(f"抽奖第{i}次提示：抽奖失败\n")
-                sio.write(response.text)
-                sio.write("\n")
-        time.sleep(random.randint(5, 10))
+        with logger.catch():
+            response = session.get(url, headers=headers, timeout=5)
+            # 签到
+            if i == 0:
+                bonus = response.json()["netdiskBonus"]
+                success = not response.json()["isSign"]
+                sio.write(f"签到提示：{"签到成功" if success else "已签到"}，获得{bonus}M空间\n")
+            # 抽奖
+            else:
+                if "errorCode" not in response.json():
+                    bonus = response.json()["prizeName"].replace("天翼云盘", "")
+                    sio.write(f"抽奖第{i}次提示：抽奖成功，获得{bonus}\n")
+                else:
+                    if response.json()["errorCode"] == "User_Not_Chance":
+                        sio.write(f"抽奖第{i}次提示：已抽奖，获得50M空间\n")
+                    else:
+                        sio.write(f"抽奖第{i}次提示：抽奖失败\n")
+                        sio.write(response.text)
+                        sio.write("\n")
+            if i != len(urls) - 1:
+                time.sleep(random.randint(5, 10))
     if success:
         pusher.push(sio.getvalue())
 
