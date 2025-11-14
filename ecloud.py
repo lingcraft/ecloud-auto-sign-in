@@ -151,8 +151,6 @@ def main():
                         sio.write(f"抽奖第{i}次提示：已抽奖，获得50M空间\n")
                     else:
                         sio.write(f"抽奖第{i}次提示：抽奖失败\n")
-                        sio.write(response.text)
-                        sio.write("\n")
             if i != len(urls) - 1:
                 time.sleep(random.randint(5, 10))
     if success:
