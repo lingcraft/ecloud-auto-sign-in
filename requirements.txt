@@ -1,5 +1,5 @@
-urllib3
-loguru
 requests
 rsa
 pytz
+urllib3
+loguru
