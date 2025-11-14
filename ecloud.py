@@ -6,6 +6,7 @@ from pusher import *
 wechat_params = os.getenv("WECHAT_PARAMS").split(",")
 ecloud_account = os.getenv("ECLOUD_ACCOUNT").split(",")
 session = requests.Session()
+set_retry(session)
 
 
 class Encoder:
@@ -49,7 +50,7 @@ class Encoder:
 
 def login(username, password):
     url = "https://m.cloud.189.cn/udb/udb_login.jsp?pageId=1&pageKey=default&clientType=wap&redirectURL=https://m.cloud.189.cn/zhuanti/2021/shakeLottery/index.html"
-    response = session.get(url)
+    response = session.get(url, timeout=5)
     pattern = r"https?://[^\s'\"]+"
     match = re.search(pattern, response.text)
     if match:
@@ -57,7 +58,7 @@ def login(username, password):
     else:
         sio.write("没有找到url\n")
         return None
-    response = session.get(url)
+    response = session.get(url, timeout=5)
     pattern = r"<a id=\"j-tab-login-link\"[^>]*href=\"([^\"]+)\""
     match = re.search(pattern, response.text)
     if match:
@@ -65,7 +66,7 @@ def login(username, password):
     else:
         sio.write("没有找到href链接\n")
         return None
-    response = session.get(href)
+    response = session.get(href, timeout=5)
     captcha_token = re.findall(r"captchaToken' value='(.+?)'", response.text)[0]
     lt = re.findall(r'lt = "(.+?)"', response.text)[0]
     return_url = re.findall(r"returnUrl= '(.+?)'", response.text)[0]
@@ -94,7 +95,7 @@ def login(username, password):
     response = session.post(url, data=data, headers=headers, timeout=5)
     if response.json()["result"] == 0:
         redirect_url = response.json()["toUrl"]
-        response = session.get(redirect_url)
+        response = session.get(redirect_url, timeout=5)
         return response
     else:
         msg = response.json()["msg"]
@@ -106,10 +107,13 @@ def main():
     pusher = WeChat("天翼云盘", wechat_params)
     # 天翼云盘签到
     username, password = ecloud_account
-    msg = login(username, password)
-    if msg is None:
-        pusher.push(sio.getvalue())
-        return
+    try:
+        msg = login(username, password)
+        if msg is None:
+            pusher.push(sio.getvalue())
+            return
+    except:
+        logger.exception("请求错误：")
     rand = str(round(time.time() * 1000))
     urls = [
         f"https://api.cloud.189.cn/mkt/userSign.action?rand={rand}&clientType=TELEANDROID&version=8.6.3&model=SM-G930K",
@@ -123,7 +127,7 @@ def main():
         "Host": "m.cloud.189.cn",
         "Accept-Encoding": "gzip, deflate",
     }
-    set_retry(session)
+
     success = False
     for i, url in enumerate(urls):
         try:
