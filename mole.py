@@ -29,8 +29,8 @@ def main():
             except:
                 logger.exception("请求错误：")
     if success:
-        pusher.push(sio.getvalue())
-    logger.info(sio.getvalue())
+        pusher.push(sio.getvalue().strip())
+    logger.info(sio.getvalue().strip())
 
 
 if __name__ == "__main__":
