@@ -1,4 +1,5 @@
 import os
+from loguru import logger
 from pusher import *
 
 # 摩尔庄园米饭签到
@@ -12,19 +13,24 @@ def main():
     success = False
     for account in mole_accounts:
         with requests.Session() as session:
+            set_retry(session)
             username, password = account.split(",")
             params = {
                 "uid": username,
                 "password": password
             }
-            session.get("https://mifan.61.com/api/v1/login", params=params)
-            response = session.get("https://mifan.61.com/api/v1/event/dailysign/", params=params)
-            data = response.json().get("data")
-            sio.write(f"摩尔签到提示：{username} {data}，获得24金豆\n")
-            if "成功" in data:
-                success = True
+            try:
+                session.get("https://mifan.61.com/api/v1/login", params=params)
+                response = session.get("https://mifan.61.com/api/v1/event/dailysign/", params=params)
+                data = response.json().get("data")
+                sio.write(f"摩尔签到提示：{username} {data}，获得24金豆\n")
+                if "成功" in data:
+                    success = True
+            except:
+                logger.exception("请求错误：")
     if success:
         pusher.push(sio.getvalue())
+    logger.info(sio.getvalue())
 
 
 if __name__ == "__main__":

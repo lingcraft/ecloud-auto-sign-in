@@ -1,6 +1,4 @@
 import base64, os, random, re, rsa, time
-from requests.adapters import HTTPAdapter
-from urllib3.util import Retry
 from loguru import logger
 from pusher import *
 
@@ -125,16 +123,10 @@ def main():
         "Host": "m.cloud.189.cn",
         "Accept-Encoding": "gzip, deflate",
     }
-    retry = Retry(
-        total=5,
-        status_forcelist=[429, 500, 502, 503, 504],
-        allowed_methods=["GET"]
-    )
-    adapter = HTTPAdapter(max_retries=retry)
-    session.mount('https://', adapter)
+    set_retry(session)
     success = False
     for i, url in enumerate(urls):
-        with logger.catch():
+        try:
             response = session.get(url, headers=headers, timeout=5)
             # 签到
             if i == 0:
@@ -153,8 +145,11 @@ def main():
                         sio.write(f"抽奖第{i}次提示：抽奖失败\n")
             if i != len(urls) - 1:
                 time.sleep(random.randint(5, 10))
+        except:
+            logger.exception("请求错误：")
     if success:
         pusher.push(sio.getvalue())
+    logger.info(sio.getvalue())
 
 
 if __name__ == "__main__":

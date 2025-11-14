@@ -1,4 +1,6 @@
 import json, requests, io, datetime, pytz
+from urllib3 import Retry
+from requests.adapters import HTTPAdapter
 
 sio = io.StringIO()
 sio.seek(0, 2)
@@ -71,3 +73,13 @@ class WeChat:
         msg = (bytes(json.dumps(data), "utf-8"))
         response = requests.post(url, msg)
         return response
+
+
+def set_retry(session):
+    retry = Retry(
+        total=5,
+        status_forcelist=[429, 500, 502, 503, 504]
+    )
+    adapter = HTTPAdapter(max_retries=retry)
+    session.mount('http://', adapter)
+    session.mount('https://', adapter)
