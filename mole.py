@@ -30,7 +30,7 @@ def main():
                 sio.write(f"摩尔签到提示：{username} {data}，获得24金豆、20米粒\n")
                 if "成功" in data:
                     success = True
-                # 点赞20次
+                # 点赞
                 data = {
                     "type": "latest",
                     "offset": -1,
@@ -50,7 +50,7 @@ def main():
                             sio.write(f"摩尔点赞提示：{username} 点赞成功{j}次，获得{j * 5}米粒\n")
                             break
                     article_id -= 1
-                # 评论10次
+                # 评论
                 text = 1
                 j = 0
                 while j < 10:
@@ -70,7 +70,7 @@ def main():
                             break
                     else:
                         text += 1
-                    # 补签
+                # 补签
                 response = session.post("https://mifan.61.com/api/v1/profile", timeout=5)  # 账号信息
                 gold = response.json().get("gold")  # 剩余米粒
                 complement_times = gold // 1000  # 可补签次数
