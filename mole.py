@@ -1,6 +1,7 @@
-import os, time
+import os, time, json
 from loguru import logger
 from datetime import date, timedelta
+from pathlib import Path
 from pusher import *
 
 # 摩尔庄园米饭签到
@@ -10,6 +11,12 @@ mole_accounts = os.getenv("MOLE_ACCOUNTS").split("\n")
 
 def main():
     pusher = WeChat("摩尔庄园", wechat_params)
+    sign_date_file = Path("mole.json")
+    if sign_date_file.exists():
+        with open(sign_date_file, "r", encoding="utf-8") as file:
+            sign_date_dict = json.load(file)
+    else:
+        sign_date_dict = {}
     # 摩尔庄园签到
     success = False
     for i, account in enumerate(mole_accounts):
@@ -33,7 +40,10 @@ def main():
                 if complement_times > 0:
                     response = session.get("https://mifan.61.com/api/v1/event/dailysign/recent", timeout=5)
                     no_sign_date = [next(iter(item)) for item in response.json().get("data") if next(iter(item.values())) == 0]
-                    next_date = date(1970, 1, 1)
+                    if account in sign_date_dict:
+                        next_date = sign_date_dict.get(account)
+                    else:
+                        next_date = date(1970, 1, 1)
                     one_day = timedelta(days=1)
                     j = 0
                     while j < complement_times:
@@ -55,10 +65,13 @@ def main():
                             next_date += one_day
                         if j != complement_times - 1:
                             time.sleep(1)
+                    sign_date_dict[account] = next_date
             if i != len(mole_accounts) - 1:
                 time.sleep(1)
         except:
             logger.exception("请求错误：")
+    with open(sign_date_file, "w", encoding="utf-8") as file:
+        json.dump(sign_date_dict, file, indent=2)
     if success:
         pusher.push(sio.getvalue().strip())
     logger.info(sio.getvalue().strip())

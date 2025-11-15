@@ -2,6 +2,8 @@ name: 签到
 
 on:
   push:
+    paths-ignore:
+      - mole.json
   schedule:
     - cron: 0,5 16 * * *
   workflow_dispatch: # workflow_dispatch 要放最后，否则会导致 schedule 失效
@@ -11,11 +13,11 @@ permissions:
 
 jobs:
   sign-in:
+    runs-on: ubuntu-latest
     env:
       WECHAT_PARAMS: ${{ secrets.WECHAT_PARAMS }}
       MOLE_ACCOUNTS: ${{ secrets.MOLE_ACCOUNTS }}
       ECLOUD_ACCOUNT: ${{ secrets.ECLOUD_ACCOUNT }}
-    runs-on: ubuntu-latest
     steps:
       - name: 拉取代码
         uses: actions/checkout@v5
@@ -32,3 +34,14 @@ jobs:
       - name: 开始天翼云盘签到
         run: |
           python ecloud.py
+#      - name: 判断补签数据是否变更
+#        id: changed-files
+#        uses: tj-actions/changed-files@v47
+#        with:
+#          files: mole.json
+      - name: 提交补签数据变更
+#        if: steps.changed-files.outputs.any_changed == 'true'
+        uses: EndBug/add-and-commit@v9
+        with:
+          add: mole.json
+          message: 摩尔补签数据更新
