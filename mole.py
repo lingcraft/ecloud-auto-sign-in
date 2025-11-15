@@ -1,6 +1,6 @@
 import os, time
 from loguru import logger
-from datetime import date, timedelta
+from datetime import datetime, date, timedelta
 from pathlib import Path
 from pusher import *
 
@@ -27,17 +27,62 @@ def main():
                 session.get("https://mifan.61.com/api/v1/login", params=params, timeout=5)  # 登录
                 response = session.get("https://mifan.61.com/api/v1/event/dailysign/", timeout=5)  # 签到
                 data = response.json().get("data")
-                sio.write(f"摩尔签到提示：{username} {data}，获得24金豆\n")
+                sio.write(f"摩尔签到提示：{username} {data}，获得24金豆、20米粒\n")
                 if "成功" in data:
                     success = True
+                # 点赞20次
+                data = {
+                    "type": "latest",
+                    "offset": -1,
+                    "count": 15,
+                    "timestamp": datetime.now().timestamp()
+                }
+                article_id = session.post("https://mifan.61.com/api/v1/feed", data=data).json().get("data").get("current_page")[0].get("data").get("article_id")  # 最新帖子ID
+                j = 0
+                while j < 20:
+                    response = session.post(f"https://mifan.61.com/api/v1/article/likes/{article_id}/", timeout=5)  # 点赞
+                    data, gold = (response.json().get(key) for key in ("data", "gold"))
+                    session.post(f"https://mifan.61.com/api/v1/article/likes/{article_id}/", data={"cancel": 1}, timeout=5)  # 取消点赞
+                    if data == 0:
+                        if gold > 0:
+                            j += 1
+                        else:
+                            sio.write(f"摩尔点赞提示：{username} 点赞成功{j}次，获得{j * 5}米粒\n")
+                            break
+                    article_id -= 1
+                # 评论10次
+                data = {
+                    "comment_article_id": 741965,
+                    "post_text": "1",
+                    "post_atcount": 0
+                }
+                text = 1
+                j = 0
+                while j < 10:
+                    data = {
+                        "comment_article_id": 741965,
+                        "post_text": text,
+                        "post_atcount": 0
+                    }
+                    response = session.post("https://mifan.61.com/api/v1/article/comment", data=data, timeout=5)  # 评论
+                    code, gold, comment_id = (response.json().get(key) for key in ("code", "gold", "comment_id"))
+                    session.post(f"https://mifan.61.com/api/v1/article/comment/delete/{comment_id}/", timeout=5)  # 删除评论
+                    if code == 200:
+                        if gold > 0:
+                            j += 1
+                        else:
+                            sio.write(f"摩尔评论提示：{username} 评论成功{j}次，获得{j * 5}米粒\n")
+                            break
+                    else:
+                        text += 1
+                    # 补签
                 response = session.post("https://mifan.61.com/api/v1/profile", timeout=5)  # 账号信息
                 gold = response.json().get("gold")  # 剩余米粒
                 complement_times = gold // 1000  # 可补签次数
-                # 补签
                 if complement_times > 0:
                     # 获取账号最近40天未签到日期
                     response = session.get("https://mifan.61.com/api/v1/event/dailysign/recent", timeout=5)  # 最近签到信息
-                    no_sign_date = [next(iter(item)) for item in response.json().get("data") if next(iter(item.values())) == 0]
+                    no_sign_date = [key for item in response.json().get("data") for key, value in item.items() if value == 0]
                     # 获取账号补签数据的最新补签日期
                     if record_file.exists():
                         with record_file.open() as file:
@@ -66,7 +111,7 @@ def main():
                         response = session.get("https://mifan.61.com/api/v1/event/dailysign/complement", params=params, timeout=5)  # 补签
                         data = response.json().get("data")
                         if "成功" in data:
-                            sio.write(f"摩尔补签提示：{username} {sign_date} {data}，获得24金豆\n")
+                            sio.write(f"摩尔补签提示：{username} {sign_date} {data}，获得24金豆、20米粒\n")
                             j += 1
                         if is_plus_day:
                             next_date += one_day
