@@ -38,7 +38,7 @@ def main():
                     no_sign_date = [next(iter(item)) for item in response.json().get("data") if next(iter(item.values())) == 0]
                     # 获取账号补签数据的最新补签日期
                     if record_file.exists():
-                        with open(record_file, "r", encoding="utf-8") as file:
+                        with record_file.open() as file:
                             latest_sign_dict = json.load(file)
                     else:
                         latest_sign_dict = {}
@@ -72,7 +72,7 @@ def main():
                             time.sleep(1)
                     # 记录补签数据
                     latest_sign_dict[account] = next_date
-                    with open(record_file, "w", encoding="utf-8") as file:
+                    with record_file.open("w") as file:
                         json.dump(latest_sign_dict, file, indent=2)
             if i != len(mole_accounts) - 1:
                 time.sleep(1)
