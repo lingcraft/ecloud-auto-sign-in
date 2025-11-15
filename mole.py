@@ -23,6 +23,7 @@ def main():
                     "uid": username,
                     "password": password
                 }
+                # 签到
                 session.get("https://mifan.61.com/api/v1/login", params=params, timeout=5)  # 登录
                 response = session.get("https://mifan.61.com/api/v1/event/dailysign/", timeout=5)  # 签到
                 data = response.json().get("data")
@@ -32,9 +33,10 @@ def main():
                 response = session.post("https://mifan.61.com/api/v1/profile", timeout=5)  # 账号信息
                 gold = response.json().get("gold")  # 剩余米粒
                 complement_times = gold // 1000  # 可补签次数
+                # 补签
                 if complement_times > 0:
                     # 获取账号最近40天未签到日期
-                    response = session.get("https://mifan.61.com/api/v1/event/dailysign/recent", timeout=5)  # 签到信息
+                    response = session.get("https://mifan.61.com/api/v1/event/dailysign/recent", timeout=5)  # 最近签到信息
                     no_sign_date = [next(iter(item)) for item in response.json().get("data") if next(iter(item.values())) == 0]
                     # 获取账号补签数据的最新补签日期
                     if record_file.exists():
