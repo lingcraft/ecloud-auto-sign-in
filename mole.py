@@ -1,4 +1,4 @@
-import os, time, json
+import os, time
 from loguru import logger
 from datetime import date, timedelta
 from pathlib import Path
@@ -11,12 +11,7 @@ mole_accounts = os.getenv("MOLE_ACCOUNTS").split("\n")
 
 def main():
     pusher = WeChat("摩尔庄园", wechat_params)
-    sign_date_file = Path("mole.json")
-    if sign_date_file.exists():
-        with open(sign_date_file, "r", encoding="utf-8") as file:
-            sign_date_dict = json.load(file)
-    else:
-        sign_date_dict = {}
+    record_file = Path("mole.json")
     # 摩尔庄园签到
     success = False
     for i, account in enumerate(mole_accounts):
@@ -34,29 +29,39 @@ def main():
                 sio.write(f"摩尔签到提示：{username} {data}，获得24金豆\n")
                 if "成功" in data:
                     success = True
-                response = session.post("https://mifan.61.com/api/v1/profile", timeout=5)
+                response = session.post("https://mifan.61.com/api/v1/profile", timeout=5)  # 账号信息
                 gold = response.json().get("gold")  # 剩余米粒
                 complement_times = gold // 1000  # 可补签次数
                 if complement_times > 0:
-                    response = session.get("https://mifan.61.com/api/v1/event/dailysign/recent", timeout=5)
+                    # 获取账号最近40天未签到日期
+                    response = session.get("https://mifan.61.com/api/v1/event/dailysign/recent", timeout=5)  # 签到信息
                     no_sign_date = [next(iter(item)) for item in response.json().get("data") if next(iter(item.values())) == 0]
-                    if account in sign_date_dict:
-                        next_date = sign_date_dict.get(account)
+                    # 获取账号补签数据的最新补签日期
+                    if record_file.exists():
+                        with open(record_file, "r", encoding="utf-8") as file:
+                            latest_sign_dict = json.load(file)
+                    else:
+                        latest_sign_dict = {}
+                    if account in latest_sign_dict:
+                        next_date = latest_sign_dict.get(account)
                     else:
                         next_date = date(1970, 1, 1)
                     one_day = timedelta(days=1)
                     j = 0
+                    # 开始补签
                     while j < complement_times:
+                        # 先补签最近40天未签到日期
                         if len(no_sign_date) > 0:
                             sign_date = no_sign_date.pop()
                             is_plus_day = False
+                        # 再从最新补签日期开始补签
                         else:
                             sign_date = next_date
                             is_plus_day = True
                         params = {
                             "complement_date": sign_date
                         }
-                        response = session.get("https://mifan.61.com/api/v1/event/dailysign/complement", params=params, timeout=5)
+                        response = session.get("https://mifan.61.com/api/v1/event/dailysign/complement", params=params, timeout=5)  # 补签
                         data = response.json().get("data")
                         if "成功" in data:
                             sio.write(f"摩尔补签提示：{username} {sign_date} {data}，获得24金豆\n")
@@ -65,13 +70,14 @@ def main():
                             next_date += one_day
                         if j != complement_times - 1:
                             time.sleep(1)
-                    sign_date_dict[account] = next_date
+                    # 记录补签数据
+                    latest_sign_dict[account] = next_date
+                    with open(record_file, "w", encoding="utf-8") as file:
+                        json.dump(latest_sign_dict, file, indent=2)
             if i != len(mole_accounts) - 1:
                 time.sleep(1)
         except:
             logger.exception("请求错误：")
-    with open(sign_date_file, "w", encoding="utf-8") as file:
-        json.dump(sign_date_dict, file, indent=2)
     if success:
         pusher.push(sio.getvalue().strip())
     logger.info(sio.getvalue().strip())
