@@ -32,13 +32,13 @@ def main():
                 complement_times = gold // 1000  # 可补签次数
                 if complement_times > 0:
                     response = session.get("https://mifan.61.com/api/v1/event/dailysign/recent", timeout=5)
-                    no_sign_data = [next(iter(item)) for item in response.json().get("data") if next(iter(item.values())) == 0]
+                    no_sign_date = [next(iter(item)) for item in response.json().get("data") if next(iter(item.values())) == 0]
                     next_date = date(1970, 1, 1)
                     one_day = timedelta(days=1)
                     i = 0
                     while i < complement_times:
-                        if len(no_sign_data) > 0:
-                            sign_date = no_sign_data.pop()
+                        if len(no_sign_date) > 0:
+                            sign_date = no_sign_date.pop()
                             is_plus_day = False
                         else:
                             sign_date = next_date
