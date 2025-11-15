@@ -127,7 +127,6 @@ def main():
         "Host": "m.cloud.189.cn",
         "Accept-Encoding": "gzip, deflate",
     }
-
     success = False
     for i, url in enumerate(urls):
         try:

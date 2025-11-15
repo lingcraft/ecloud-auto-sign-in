@@ -12,15 +12,15 @@ def main():
     pusher = WeChat("摩尔庄园", wechat_params)
     # 摩尔庄园签到
     success = False
-    for account in mole_accounts:
-        with requests.Session() as session:
-            set_retry(session)
-            username, password = account.split(",")
-            params = {
-                "uid": username,
-                "password": password
-            }
-            try:
+    for i, account in enumerate(mole_accounts):
+        try:
+            with requests.Session() as session:
+                set_retry(session)
+                username, password = account.split(",")
+                params = {
+                    "uid": username,
+                    "password": password
+                }
                 session.get("https://mifan.61.com/api/v1/login", params=params, timeout=5)  # 登录
                 response = session.get("https://mifan.61.com/api/v1/event/dailysign/", timeout=5)  # 签到
                 data = response.json().get("data")
@@ -35,8 +35,8 @@ def main():
                     no_sign_date = [next(iter(item)) for item in response.json().get("data") if next(iter(item.values())) == 0]
                     next_date = date(1970, 1, 1)
                     one_day = timedelta(days=1)
-                    i = 0
-                    while i < complement_times:
+                    j = 0
+                    while j < complement_times:
                         if len(no_sign_date) > 0:
                             sign_date = no_sign_date.pop()
                             is_plus_day = False
@@ -50,13 +50,15 @@ def main():
                         data = response.json().get("data")
                         if "成功" in data:
                             sio.write(f"摩尔补签提示：{username} {sign_date} {data}，获得24金豆\n")
-                            i += 1
+                            j += 1
                         if is_plus_day:
                             next_date += one_day
-                        time.sleep(1)
-            except:
-                logger.exception("请求错误：")
-        time.sleep(1)
+                        if j != complement_times - 1:
+                            time.sleep(1)
+            if i != len(mole_accounts) - 1:
+                time.sleep(1)
+        except:
+            logger.exception("请求错误：")
     if success:
         pusher.push(sio.getvalue().strip())
     logger.info(sio.getvalue().strip())
