@@ -51,11 +51,6 @@ def main():
                             break
                     article_id -= 1
                 # 评论10次
-                data = {
-                    "comment_article_id": 741965,
-                    "post_text": "1",
-                    "post_atcount": 0
-                }
                 text = 1
                 j = 0
                 while j < 10:
