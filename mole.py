@@ -33,7 +33,7 @@ def main():
                 if complement_times > 0:
                     response = session.get("https://mifan.61.com/api/v1/event/dailysign/recent", timeout=5)
                     no_sign_data = [next(iter(item)) for item in response.json().get("data") if next(iter(item.values())) == 0]
-                    start_date = date(1970, 1, 1)
+                    next_date = date(1970, 1, 1)
                     one_day = timedelta(days=1)
                     i = 0
                     while i < complement_times:
@@ -41,7 +41,7 @@ def main():
                             sign_date = no_sign_data.pop()
                             is_plus_day = False
                         else:
-                            sign_date = start_date
+                            sign_date = next_date
                             is_plus_day = True
                         params = {
                             "complement_date": sign_date
@@ -52,7 +52,7 @@ def main():
                             sio.write(f"摩尔补签提示：{username} {sign_date} {data}，获得24金豆\n")
                             i += 1
                         if is_plus_day:
-                            start_date += one_day
+                            next_date += one_day
                         time.sleep(1)
             except:
                 logger.exception("请求错误：")
