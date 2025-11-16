@@ -47,7 +47,8 @@ def main():
                         if gold > 0:
                             j += 1
                         else:
-                            sio.write(f"摩尔点赞提示：{username} 点赞成功{j}次，获得{j * 5}米粒\n")
+                            if j > 0:
+                                sio.write(f"摩尔点赞提示：{username} 点赞成功{j}次，获得{j * 5}米粒\n")
                             break
                     article_id -= 1
                 # 评论
@@ -66,7 +67,8 @@ def main():
                         if gold > 0:
                             j += 1
                         else:
-                            sio.write(f"摩尔评论提示：{username} 评论成功{j}次，获得{j * 5}米粒\n")
+                            if j > 0:
+                                sio.write(f"摩尔评论提示：{username} 评论成功{j}次，获得{j * 5}米粒\n")
                             break
                     else:
                         text += 1
