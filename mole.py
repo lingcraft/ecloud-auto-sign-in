@@ -27,7 +27,7 @@ def main():
                 session.get("https://mifan.61.com/api/v1/login", params=params, timeout=5)  # 登录
                 response = session.get("https://mifan.61.com/api/v1/event/dailysign/", timeout=5)  # 签到
                 data = response.json().get("data")
-                sio.write(f"摩尔签到提示：{username} {data}，获得24金豆、20米粒\n")
+                sio.write(f"摩尔签到提示：{username} {data}，获得24金豆\n")
                 if "成功" in data:
                     success = True
                 # 点赞
@@ -59,7 +59,10 @@ def main():
                 }
                 j = 0
                 while j < 10:
-                    response = session.post("https://mifan.61.com/api/v1/article/comment", data=data, timeout=5)  # 评论
+                    try:
+                        response = session.post("https://mifan.61.com/api/v1/article/comment", data=data, timeout=10)  # 评论
+                    except:
+                        continue
                     code, gold, comment_id = (response.json().get(key) for key in ("code", "gold", "comment_id"))
                     session.post(f"https://mifan.61.com/api/v1/article/comment/delete/{comment_id}/", timeout=5)  # 删除评论
                     if code == 200:
@@ -107,7 +110,7 @@ def main():
                         response = session.get("https://mifan.61.com/api/v1/event/dailysign/complement", params=params, timeout=5)  # 补签
                         data = response.json().get("data")
                         if "成功" in data:
-                            sio.write(f"摩尔补签提示：{username} {sign_date} {data}，获得24金豆、20米粒\n")
+                            sio.write(f"摩尔补签提示：{username} {sign_date} {data}，获得24金豆\n")
                             j += 1
                         if is_plus_day:
                             next_date += one_day
