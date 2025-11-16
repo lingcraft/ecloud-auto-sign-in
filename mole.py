@@ -52,14 +52,13 @@ def main():
                             break
                     article_id -= 1
                 # 评论
-                text = 1
+                data = {
+                    "comment_article_id": 741965,
+                    "post_text": 1,
+                    "post_atcount": 0
+                }
                 j = 0
                 while j < 10:
-                    data = {
-                        "comment_article_id": 741965,
-                        "post_text": text,
-                        "post_atcount": 0
-                    }
                     response = session.post("https://mifan.61.com/api/v1/article/comment", data=data, timeout=5)  # 评论
                     code, gold, comment_id = (response.json().get(key) for key in ("code", "gold", "comment_id"))
                     session.post(f"https://mifan.61.com/api/v1/article/comment/delete/{comment_id}/", timeout=5)  # 删除评论
@@ -71,7 +70,7 @@ def main():
                                 sio.write(f"摩尔评论提示：{username} 评论成功{j}次，获得{j * 5}米粒\n")
                             break
                     else:
-                        text += 1
+                        data["post_text"] += 1
                 # 补签
                 response = session.post("https://mifan.61.com/api/v1/profile", timeout=5)  # 账号信息
                 gold = response.json().get("gold")  # 剩余米粒
