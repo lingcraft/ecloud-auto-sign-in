@@ -17,6 +17,7 @@ def main():
     for i, account in enumerate(mole_accounts):
         try:
             with requests.Session() as session:
+                # 请求参数、账号信息
                 set_retry(session)
                 username, password = account.split(",")
                 params = {
@@ -40,17 +41,22 @@ def main():
                 article_id = session.post("https://mifan.61.com/api/v1/feed", data=data).json().get("data").get("current_page")[0].get("data").get("article_id")  # 最新帖子ID
                 j = 0
                 while j < 20:
-                    response = session.post(f"https://mifan.61.com/api/v1/article/likes/{article_id}/", timeout=5)  # 点赞
-                    data, gold = (response.json().get(key) for key in ("data", "gold"))
-                    session.post(f"https://mifan.61.com/api/v1/article/likes/{article_id}/", data={"cancel": 1}, timeout=5)  # 取消点赞
-                    if data == 0:
-                        if gold > 0:
-                            j += 1
-                        else:
-                            if j > 0:
-                                sio.write(f"摩尔点赞提示：{username} 点赞成功{j}次，获得{j * 5}米粒\n")
-                            break
-                    article_id -= 1
+                    try:
+                        response = session.post(f"https://mifan.61.com/api/v1/article/likes/{article_id}/", timeout=5)  # 点赞
+                        response.raise_for_status()
+                    except:
+                        logger.exception(f"点赞帖子{article_id}错误：")
+                    else:
+                        data, gold = (response.json().get(key) for key in ("data", "gold"))
+                        session.post(f"https://mifan.61.com/api/v1/article/likes/{article_id}/", data={"cancel": 1}, timeout=5)  # 取消点赞
+                        if data == 0:
+                            if gold > 0:
+                                j += 1
+                            else:
+                                if j > 0:
+                                    sio.write(f"摩尔点赞提示：{username} 点赞成功，获得{j * 5}米粒\n")
+                                break
+                        article_id -= 1
                 # 评论
                 data = {
                     "comment_article_id": 741965,
@@ -61,19 +67,21 @@ def main():
                 while j < 10:
                     try:
                         response = session.post("https://mifan.61.com/api/v1/article/comment", data=data, timeout=10)  # 评论
+                        response.raise_for_status()
                     except:
-                        continue
-                    code, gold, comment_id = (response.json().get(key) for key in ("code", "gold", "comment_id"))
-                    session.post(f"https://mifan.61.com/api/v1/article/comment/delete/{comment_id}/", timeout=5)  # 删除评论
-                    if code == 200:
-                        if gold > 0:
-                            j += 1
-                        else:
-                            if j > 0:
-                                sio.write(f"摩尔评论提示：{username} 评论成功{j}次，获得{j * 5}米粒\n")
-                            break
+                        logger.exception(f"评论内容\"{data.get("post_text")}\"错误：")
                     else:
-                        data["post_text"] += 1
+                        code, gold, comment_id = (response.json().get(key) for key in ("code", "gold", "comment_id"))
+                        session.post(f"https://mifan.61.com/api/v1/article/comment/delete/{comment_id}/", timeout=5)  # 删除评论
+                        if code == 200:
+                            if gold > 0:
+                                j += 1
+                            else:
+                                if j > 0:
+                                    sio.write(f"摩尔评论提示：{username} 评论成功，获得{j * 5}米粒\n")
+                                break
+                        else:
+                            data["post_text"] += 1
                 # 补签
                 response = session.post("https://mifan.61.com/api/v1/profile", timeout=5)  # 账号信息
                 gold = response.json().get("gold")  # 剩余米粒
