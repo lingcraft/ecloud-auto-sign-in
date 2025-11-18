@@ -96,7 +96,7 @@ def main():
                             latest_sign_dict = json.load(file)
                     else:
                         latest_sign_dict = {}
-                    if account in latest_sign_dict:
+                    if username in latest_sign_dict:
                         next_date = latest_sign_dict.get(username)
                     else:
                         next_date = date(1970, 1, 1)
