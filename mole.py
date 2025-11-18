@@ -125,7 +125,7 @@ def main():
                         if j != complement_times - 1:
                             time.sleep(1)
                     # 记录补签数据
-                    latest_sign_dict[account] = next_date
+                    latest_sign_dict[username] = next_date
                     with record_file.open("w") as file:
                         json.dump(latest_sign_dict, file, indent=2)
             if i != len(mole_accounts) - 1:
