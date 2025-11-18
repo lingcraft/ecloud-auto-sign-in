@@ -14,7 +14,7 @@ def main():
     record_file = Path("mole.json")
     # 摩尔庄园签到
     success = False
-    for i, account in enumerate(mole_accounts):
+    for index, account in enumerate(mole_accounts):
         with logger.catch():
             with requests.Session() as session:
                 # 请求参数、账号信息
@@ -31,7 +31,7 @@ def main():
                 sio.write(f"摩尔签到提示：{username} {data}，获得24金豆\n")
                 if "成功" in data:
                     success = True
-                # 点赞
+                # 点赞20次
                 data = {
                     "type": "latest",
                     "offset": -1,
@@ -39,28 +39,29 @@ def main():
                     "timestamp": datetime.now().timestamp()
                 }
                 article_id = session.post("https://mifan.61.com/api/v1/feed", data=data).json().get("data").get("current_page")[0].get("data").get("article_id")  # 最新帖子ID
-                j = 0
-                while j < 20:
+                success_times = 0
+                while success_times < 20:
                     response = session.post(f"https://mifan.61.com/api/v1/article/likes/{article_id}/", timeout=5)  # 点赞
                     data, gold = (response.json().get(key) for key in ("data", "gold"))
+                    session.post(f"https://mifan.61.com/api/v1/article/likes/{article_id}/", data={"cancel": 1}, timeout=5)  # 取消点赞
                     if data == 0:
                         if gold > 0:
-                            j += 1
-                        else:
-                            if j > 0:
-                                sio.write(f"摩尔点赞提示：{username} 点赞成功，获得{j * 5}米粒\n")
+                            success_times += 1
+                        else:  # 米粒达到上限
                             break
-                    session.post(f"https://mifan.61.com/api/v1/article/likes/{article_id}/", data={"cancel": 1}, timeout=5)  # 取消点赞
                     article_id -= 1
-                    time.sleep(1)
-                # 评论
+                    if success_times < 19:
+                        time.sleep(1)
+                if success_times > 0:
+                    sio.write(f"摩尔点赞提示：{username} 点赞成功，获得{success_times * 5}米粒\n")
+                # 评论10次
                 data = {
                     "comment_article_id": 741965,
                     "post_text": 1,
                     "post_atcount": 0
                 }
-                j = 0
-                while j < 10:
+                success_times = 0
+                while success_times < 10:
                     try:
                         response = session.post("https://mifan.61.com/api/v1/article/comment", data=data, timeout=10)  # 评论
                         response.raise_for_status()
@@ -68,16 +69,17 @@ def main():
                         logger.exception(f"评论内容\"{data.get("post_text")}\"错误：")
                     else:
                         code, gold, comment_id = (response.json().get(key) for key in ("code", "gold", "comment_id"))
+                        session.post(f"https://mifan.61.com/api/v1/article/comment/delete/{comment_id}/", timeout=5)  # 删除评论
                         if code == 200:
                             if gold > 0:
-                                j += 1
-                            else:
-                                if j > 0:
-                                    sio.write(f"摩尔评论提示：{username} 评论成功，获得{j * 5}米粒\n")
+                                success_times += 1
+                            else:  # 米粒达到上限
                                 break
-                        session.post(f"https://mifan.61.com/api/v1/article/comment/delete/{comment_id}/", timeout=5)  # 删除评论
                         data["post_text"] += 1
-                        time.sleep(1)
+                        if success_times < 9:
+                            time.sleep(1)
+                if success_times > 0:
+                    sio.write(f"摩尔评论提示：{username} 评论成功，获得{success_times * 5}米粒\n")
                 # 补签
                 response = session.post("https://mifan.61.com/api/v1/profile", timeout=5)  # 账号信息
                 gold = response.json().get("gold")  # 剩余米粒
@@ -94,16 +96,16 @@ def main():
                         latest_sign_dict = {}
                     next_date = date.fromisoformat(latest_sign_dict.get(username, "1970-01-01"))
                     one_day = timedelta(days=1)
-                    j = 0
+                    success_times = 0
                     # 开始补签
-                    while j < complement_times:
+                    while success_times < complement_times:
                         # 先补签最近40天未签到日期
                         if len(no_sign_date) > 0:
                             sign_date = no_sign_date.pop()
                             is_plus_day = False
                         # 再从最新补签日期开始补签
                         else:
-                            sign_date = next_date
+                            sign_date = next_date.isoformat()
                             is_plus_day = True
                         params = {
                             "complement_date": sign_date
@@ -111,17 +113,17 @@ def main():
                         response = session.get("https://mifan.61.com/api/v1/event/dailysign/complement", params=params, timeout=5)  # 补签
                         data = response.json().get("data")
                         if "成功" in data:
-                            sio.write(f"摩尔补签提示：{username} {sign_date} {data}，获得24金豆\n")
-                            j += 1
+                            sio.write(f"摩尔补签提示：{username} {data}，获得24金豆\n")
+                            success_times += 1
                         if is_plus_day:
                             next_date += one_day
-                        if j < complement_times - 1:
+                        if success_times < complement_times - 1:
                             time.sleep(1)
                     # 记录补签数据
                     latest_sign_dict[username] = next_date.isoformat()
                     with record_file.open("w") as file:
                         json.dump(latest_sign_dict, file, indent=2)
-        if i != len(mole_accounts) - 1:
+        if index < len(mole_accounts) - 1:
             time.sleep(1)
     if success:
         pusher.push(sio.getvalue().strip())

@@ -126,12 +126,12 @@ def main():
         "Accept-Encoding": "gzip, deflate",
     }
     success = False
-    for i, url in enumerate(urls):
+    for index, url in enumerate(urls):
         with logger.catch():
             response = session.get(url, headers=headers, timeout=5)
             response.raise_for_status()
             # 签到
-            if i == 0:
+            if index == 0:
                 bonus = response.json()["netdiskBonus"]
                 success = not response.json()["isSign"]
                 sio.write(f"签到提示：{"签到成功" if success else "已签到"}，获得{bonus}M空间\n")
@@ -139,13 +139,13 @@ def main():
             else:
                 if "errorCode" not in response.json():
                     bonus = response.json()["prizeName"].replace("天翼云盘", "")
-                    sio.write(f"抽奖第{i}次提示：抽奖成功，获得{bonus}\n")
+                    sio.write(f"抽奖第{index}次提示：抽奖成功，获得{bonus}\n")
                 else:
                     if response.json()["errorCode"] == "User_Not_Chance":
-                        sio.write(f"抽奖第{i}次提示：已抽奖，获得50M空间\n")
+                        sio.write(f"抽奖第{index}次提示：已抽奖，获得50M空间\n")
                     else:
-                        sio.write(f"抽奖第{i}次提示：抽奖失败\n")
-        if i < len(urls) - 1:
+                        sio.write(f"抽奖第{index}次提示：抽奖失败\n")
+        if index < len(urls) - 1:
             time.sleep(random.randint(5, 10))
     if success:
         pusher.push(sio.getvalue().strip())
