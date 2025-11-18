@@ -97,7 +97,7 @@ def main():
                     else:
                         latest_sign_dict = {}
                     if account in latest_sign_dict:
-                        next_date = latest_sign_dict.get(account)
+                        next_date = latest_sign_dict.get(username)
                     else:
                         next_date = date(1970, 1, 1)
                     one_day = timedelta(days=1)
