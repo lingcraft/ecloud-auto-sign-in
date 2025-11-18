@@ -75,9 +75,8 @@ def main():
                                 if j > 0:
                                     sio.write(f"摩尔评论提示：{username} 评论成功，获得{j * 5}米粒\n")
                                 break
-                        else:  # 评论重复
-                            data["post_text"] += 1
                         session.post(f"https://mifan.61.com/api/v1/article/comment/delete/{comment_id}/", timeout=5)  # 删除评论
+                        data["post_text"] += 1
                         time.sleep(1)
                 # 补签
                 response = session.post("https://mifan.61.com/api/v1/profile", timeout=5)  # 账号信息
@@ -116,7 +115,7 @@ def main():
                             j += 1
                         if is_plus_day:
                             next_date += one_day
-                        if j != complement_times - 1:
+                        if j < complement_times - 1:
                             time.sleep(1)
                     # 记录补签数据
                     latest_sign_dict[username] = next_date.isoformat()
