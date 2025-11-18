@@ -107,13 +107,11 @@ def main():
     pusher = WeChat("天翼云盘", wechat_params)
     # 天翼云盘签到
     username, password = ecloud_account
-    try:
+    with logger.catch():
         msg = login(username, password)
         if msg is None:
             pusher.push(sio.getvalue())
             return
-    except:
-        logger.exception("请求错误：")
     rand = str(round(time.time() * 1000))
     urls = [
         f"https://api.cloud.189.cn/mkt/userSign.action?rand={rand}&clientType=TELEANDROID&version=8.6.3&model=SM-G930K",
@@ -129,8 +127,9 @@ def main():
     }
     success = False
     for i, url in enumerate(urls):
-        try:
+        with logger.catch():
             response = session.get(url, headers=headers, timeout=5)
+            response.raise_for_status()
             # 签到
             if i == 0:
                 bonus = response.json()["netdiskBonus"]
@@ -146,10 +145,8 @@ def main():
                         sio.write(f"抽奖第{i}次提示：已抽奖，获得50M空间\n")
                     else:
                         sio.write(f"抽奖第{i}次提示：抽奖失败\n")
-            if i != len(urls) - 1:
-                time.sleep(random.randint(5, 10))
-        except:
-            logger.exception("请求错误：")
+        if i != len(urls) - 1:
+            time.sleep(random.randint(5, 10))
     if success:
         pusher.push(sio.getvalue().strip())
     logger.info(sio.getvalue().strip())
