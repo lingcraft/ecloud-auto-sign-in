@@ -96,10 +96,7 @@ def main():
                             latest_sign_dict = json.load(file)
                     else:
                         latest_sign_dict = {}
-                    if username in latest_sign_dict:
-                        next_date = latest_sign_dict.get(username)
-                    else:
-                        next_date = date(1970, 1, 1)
+                    next_date = latest_sign_dict.get(username, date(1970, 1, 1))
                     one_day = timedelta(days=1)
                     j = 0
                     # 开始补签
