@@ -113,12 +113,13 @@ def main():
                         response = session.get("https://mifan.61.com/api/v1/event/dailysign/complement", params=params, timeout=5)  # 补签
                         data = response.json().get("data")
                         if "成功" in data:
-                            sio.write(f"摩尔补签提示：{username} {data}，获得24金豆\n")
                             success_times += 1
                         if is_plus_day:
                             next_date += one_day
                         if success_times < complement_times - 1:
                             time.sleep(1)
+                    if success_times > 0:
+                        sio.write(f"摩尔补签提示：{username} {data}，获得{success_times * 24}金豆\n")
                     # 记录补签数据
                     latest_sign_dict[username] = next_date.isoformat()
                     with record_file.open("w") as file:
