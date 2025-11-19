@@ -14,7 +14,7 @@ def main():
     record_file = Path("mole.json")
     # 摩尔庄园签到
     success = False
-    for index, account in enumerate(mole_accounts):
+    for account in mole_accounts:
         with logger.catch():
             with requests.Session() as session:
                 # 请求参数、账号信息
@@ -50,8 +50,6 @@ def main():
                         else:  # 米粒达到上限
                             break
                     article_id -= 1
-                    if success_times < 19:
-                        time.sleep(1)
                 if success_times > 0:
                     sio.write(f"摩尔点赞提示：{username} 点赞成功，获得{success_times * 5}米粒\n")
                 # 评论10次
@@ -76,8 +74,6 @@ def main():
                             else:  # 米粒达到上限
                                 break
                         data["post_text"] += 1
-                        if success_times < 9:
-                            time.sleep(1)
                 if success_times > 0:
                     sio.write(f"摩尔评论提示：{username} 评论成功，获得{success_times * 5}米粒\n")
                 # 补签
@@ -116,16 +112,12 @@ def main():
                             success_times += 1
                         if is_plus_day:
                             next_date += one_day
-                        if success_times < complement_times - 1:
-                            time.sleep(1)
                     if success_times > 0:
                         sio.write(f"摩尔补签提示：{username} {data}，获得{success_times * 24}金豆\n")
                     # 记录补签数据
                     latest_sign_dict[username] = next_date.isoformat()
                     with record_file.open("w") as file:
                         json.dump(latest_sign_dict, file, indent=2)
-        if index < len(mole_accounts) - 1:
-            time.sleep(1)
     if success:
         pusher.push(sio.getvalue().strip())
     logger.info(sio.getvalue().strip())
