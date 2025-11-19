@@ -18,7 +18,6 @@ def main():
         with logger.catch():
             with requests.Session() as session:
                 # 请求参数、账号信息
-                set_retry(session)
                 username, password = account.split(",")
                 params = {
                     "uid": username,
@@ -61,7 +60,7 @@ def main():
                 success_times = 0
                 while success_times < 10:
                     try:
-                        response = session.post("https://mifan.61.com/api/v1/article/comment", data=data, timeout=10)  # 评论
+                        response = session.post("https://mifan.61.com/api/v1/article/comment", data=data, timeout=(5, 20))  # 评论
                         response.raise_for_status()
                     except:
                         logger.exception(f"评论内容\"{data.get("post_text")}\"错误：")
