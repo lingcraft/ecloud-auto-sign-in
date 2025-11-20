@@ -41,7 +41,7 @@ def main():
                 success_times = 0
                 while success_times < 20:
                     try:
-                        response = session.post(f"https://mifan.61.com/api/v1/article/likes/{article_id}/", timeout=(5, 30))  # 点赞
+                        response = session.post(f"https://mifan.61.com/api/v1/article/likes/{article_id}/", timeout=(5, 10))  # 点赞
                         response.raise_for_status()
                     except:
                         logger.exception(f"点赞帖子 {article_id} 出错：")
@@ -65,7 +65,7 @@ def main():
                 success_times = 0
                 while success_times < 10:
                     try:
-                        response = session.post("https://mifan.61.com/api/v1/article/comment", data=data, timeout=(5, 30))  # 评论
+                        response = session.post("https://mifan.61.com/api/v1/article/comment", data=data, timeout=(5, 20))  # 评论
                         response.raise_for_status()
                     except:
                         logger.exception(f"评论内容 {data.get("post_text")} 出错：")
