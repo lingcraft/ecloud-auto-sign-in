@@ -24,8 +24,8 @@ def main():
                     "password": password
                 }
                 # 签到
-                session.get("https://mifan.61.com/api/v1/login", params=params, timeout=5)  # 登录
-                response = session.get("https://mifan.61.com/api/v1/event/dailysign/", timeout=5)  # 签到
+                session.get("https://mifan.61.com/api/v1/login", params=params)  # 登录
+                response = session.get("https://mifan.61.com/api/v1/event/dailysign/")  # 签到
                 data = response.json().get("data")
                 sio.write(f"摩尔签到提示：{username} {data}，获得24金豆\n")
                 if "成功" in data:
@@ -40,20 +40,15 @@ def main():
                 article_id = session.post("https://mifan.61.com/api/v1/feed", data=data).json().get("data").get("current_page")[0].get("data").get("article_id")  # 最新帖子ID
                 success_times = 0
                 while success_times < 20:
-                    try:
-                        response = session.post(f"https://mifan.61.com/api/v1/article/likes/{article_id}/", timeout=(5, 10))  # 点赞
-                        response.raise_for_status()
-                    except:
-                        logger.exception(f"点赞帖子 {article_id} 出错：")
-                    else:
-                        data, gold = (response.json().get(key) for key in ("data", "gold"))
-                        session.post(f"https://mifan.61.com/api/v1/article/likes/{article_id}/", data={"cancel": 1}, timeout=5)  # 取消点赞
-                        if data == 0:
-                            if gold > 0:
-                                success_times += 1
-                            else:  # 米粒达到上限
-                                break
-                        article_id -= 1
+                    response = session.post(f"https://mifan.61.com/api/v1/article/likes/{article_id}/")  # 点赞
+                    data, gold = (response.json().get(key) for key in ("data", "gold"))
+                    session.post(f"https://mifan.61.com/api/v1/article/likes/{article_id}/", data={"cancel": 1})  # 取消点赞
+                    if data == 0:
+                        if gold > 0:
+                            success_times += 1
+                        else:  # 米粒达到上限
+                            break
+                    article_id -= 1
                 if success_times > 0:
                     sio.write(f"摩尔点赞提示：{username} 点赞成功，获得{success_times * 5}米粒\n")
                 # 评论10次
@@ -64,29 +59,24 @@ def main():
                 }
                 success_times = 0
                 while success_times < 10:
-                    try:
-                        response = session.post("https://mifan.61.com/api/v1/article/comment", data=data, timeout=(5, 20))  # 评论
-                        response.raise_for_status()
-                    except:
-                        logger.exception(f"评论内容 {data.get("post_text")} 出错：")
-                    else:
-                        code, gold, comment_id = (response.json().get(key) for key in ("code", "gold", "comment_id"))
-                        session.post(f"https://mifan.61.com/api/v1/article/comment/delete/{comment_id}/", timeout=5)  # 删除评论
-                        if code == 200:
-                            if gold > 0:
-                                success_times += 1
-                            else:  # 米粒达到上限
-                                break
-                        data["post_text"] += 1
+                    response = session.post("https://mifan.61.com/api/v1/article/comment", data=data)  # 评论
+                    code, gold, comment_id = (response.json().get(key) for key in ("code", "gold", "comment_id"))
+                    session.post(f"https://mifan.61.com/api/v1/article/comment/delete/{comment_id}/")  # 删除评论
+                    if code == 200:
+                        if gold > 0:
+                            success_times += 1
+                        else:  # 米粒达到上限
+                            break
+                    data["post_text"] += 1
                 if success_times > 0:
                     sio.write(f"摩尔评论提示：{username} 评论成功，获得{success_times * 5}米粒\n")
                 # 补签
-                response = session.post("https://mifan.61.com/api/v1/profile", timeout=5)  # 账号信息
+                response = session.post("https://mifan.61.com/api/v1/profile")  # 账号信息
                 gold = response.json().get("gold")  # 剩余米粒
                 complement_times = gold // 1000  # 可补签次数
                 if complement_times > 0:
                     # 获取账号最近40天未签到日期
-                    response = session.get("https://mifan.61.com/api/v1/event/dailysign/recent", timeout=5)  # 最近签到信息
+                    response = session.get("https://mifan.61.com/api/v1/event/dailysign/recent")  # 最近签到信息
                     no_sign_date = [key for item in response.json().get("data") for key, value in item.items() if value == 0]
                     # 获取账号补签数据的最新补签日期
                     if record_file.exists():
@@ -110,7 +100,7 @@ def main():
                         params = {
                             "complement_date": sign_date
                         }
-                        response = session.get("https://mifan.61.com/api/v1/event/dailysign/complement", params=params, timeout=5)  # 补签
+                        response = session.get("https://mifan.61.com/api/v1/event/dailysign/complement", params=params)  # 补签
                         data = response.json().get("data")
                         if "成功" in data:
                             success_times += 1
