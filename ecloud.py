@@ -50,23 +50,21 @@ class Encoder:
 
 def login(username, password):
     url = "https://m.cloud.189.cn/udb/udb_login.jsp?pageId=1&pageKey=default&clientType=wap&redirectURL=https://m.cloud.189.cn/zhuanti/2021/shakeLottery/index.html"
-    response = session.get(url, timeout=5)
-    pattern = r"https?://[^\s'\"]+"
-    match = re.search(pattern, response.text)
+    response = session.get(url, timeout=10)
+    match = re.search(r"https?://[^\s'\"]+", response.text)
     if match:
         url = match.group()
     else:
-        sio.write("没有找到url\n")
+        sio.write("未找到动态登录页\n")
         return None
-    response = session.get(url, timeout=5)
-    pattern = r"<a id=\"j-tab-login-link\"[^>]*href=\"([^\"]+)\""
-    match = re.search(pattern, response.text)
+    response = session.get(url, timeout=10)
+    match = re.search(r"<a id=\"j-tab-login-link\"[^>]*href=\"([^\"]+)\"", response.text)
     if match:
         href = match.group(1)
     else:
-        sio.write("没有找到href链接\n")
+        sio.write("登录入口获取失败\n")
         return None
-    response = session.get(href, timeout=5)
+    response = session.get(href, timeout=10)
     captcha_token = re.findall(r"captchaToken' value='(.+?)'", response.text)[0]
     lt = re.findall(r'lt = "(.+?)"', response.text)[0]
     return_url = re.findall(r"returnUrl= '(.+?)'", response.text)[0]
@@ -92,10 +90,10 @@ def login(username, password):
         "mailSuffix": "@189.cn",
         "paramId": param_id
     }
-    response = session.post(url, data=data, headers=headers, timeout=5)
+    response = session.post(url, data=data, headers=headers, timeout=10)
     if response.json()["result"] == 0:
         redirect_url = response.json()["toUrl"]
-        response = session.get(redirect_url, timeout=5)
+        response = session.get(redirect_url, timeout=10)
         return response
     else:
         msg = response.json()["msg"]
@@ -128,7 +126,7 @@ def main():
     success = False
     for index, url in enumerate(urls):
         with logger.catch():
-            response = session.get(url, headers=headers, timeout=5)
+            response = session.get(url, headers=headers, timeout=10)
             response.raise_for_status()
             # 签到
             if index == 0:
