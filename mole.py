@@ -1,4 +1,4 @@
-import os, time
+import os, random
 from loguru import logger
 from datetime import date, timedelta
 from pathlib import Path
@@ -52,24 +52,35 @@ def main():
                 if success_times > 0:
                     sio.write(f"摩尔点赞提示：{username} 点赞成功，获得{success_times * 5}米粒\n")
                 # 评论10次
+                article_id = session.get("https://mifan.61.com/api/v1/article/home").json().get("data").get("current_page")[0].get("data").get("article_id")  # 个人帖子ID
+                text = random.sample(range(100), 20)
                 data = {
-                    "comment_article_id": 741965,
-                    "post_text": 1,
+                    "comment_article_id": article_id,
+                    "post_text": text.pop(),
                     "post_atcount": 0
                 }
                 success_times = 0
                 while success_times < 10:
-                    response = session.post("https://mifan.61.com/api/v1/article/comment", data=data)  # 评论
-                    code, gold, comment_id = (response.json().get(key) for key in ("code", "gold", "comment_id"))
-                    session.post(f"https://mifan.61.com/api/v1/article/comment/delete/{comment_id}/")  # 删除评论
-                    if code == 200:
-                        if gold > 0:
-                            success_times += 1
-                        else:  # 米粒达到上限
-                            break
-                    data["post_text"] += 1
+                    try:
+                        response = session.post("https://mifan.61.com/api/v1/article/comment", data=data, timeout=30)  # 评论
+                        response.raise_for_status()
+                    except:
+                        data["post_text"] = text.pop()
+                    else:
+                        code, gold = (response.json().get(key) for key in ("code", "gold"))
+                        if code == 200:
+                            if gold > 0:
+                                success_times += 1
+                            else:  # 米粒达到上限
+                                break
+                        data["post_text"] = text.pop()
                 if success_times > 0:
                     sio.write(f"摩尔评论提示：{username} 评论成功，获得{success_times * 5}米粒\n")
+                # 删除评论
+                comments = session.get(f"https://mifan.61.com/api/v1/article/comment/{article_id}/").json().get("data")  # 获取评论
+                while len(comments) > 0:
+                    comment_id = comments.pop().get("cid")
+                    session.post(f"https://mifan.61.com/api/v1/article/comment/delete/{comment_id}/")  # 删除
                 # 补签
                 response = session.post("https://mifan.61.com/api/v1/profile")  # 账号信息
                 gold = response.json().get("gold")  # 剩余米粒
