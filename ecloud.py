@@ -70,7 +70,6 @@ def login(username, password):
     return_url = re.findall(r"returnUrl= '(.+?)'", response.text)[0]
     param_id = re.findall(r'paramId = "(.+?)"', response.text)[0]
     j_rsa_key = re.findall(r'j_rsaKey" value="(\S+)"', response.text, re.M)[0]
-    session.headers.update({"lt": lt})
     encoder = Encoder()
     username_rsa = encoder.rsa_encode(j_rsa_key, username)
     password_rsa = encoder.rsa_encode(j_rsa_key, password)
@@ -78,6 +77,7 @@ def login(username, password):
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:74.0) Gecko/20100101 Firefox/76.0",
         "Referer": "https://open.e.189.cn/",
+        "lt": lt
     }
     data = {
         "appKey": "cloud",
