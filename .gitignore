@@ -1,3 +1,4 @@
 .idea
 env.py
-mifan.js
+*.js
+api*
