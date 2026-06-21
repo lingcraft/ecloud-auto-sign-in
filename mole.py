@@ -25,8 +25,8 @@ def main():
                 }
                 # 签到
                 session.get("https://mifan.61.com/api/v1/login", params=params)  # 登录
-                response = session.get("https://mifan.61.com/api/v1/event/dailysign/")  # 签到
-                data = response.json().get("data")
+                res = session.get("https://mifan.61.com/api/v1/event/dailysign/")  # 签到
+                data = res.json().get("data")
                 sio.write(f"摩尔签到提示：{username} {data}，获得24金豆\n")
                 if "成功" in data:
                     success = True
@@ -40,8 +40,8 @@ def main():
                 article_id = session.post("https://mifan.61.com/api/v1/feed", data=data).json().get("data").get("current_page")[0].get("data").get("article_id")  # 最新帖子ID
                 success_times = 0
                 while success_times < 20:
-                    response = session.post(f"https://mifan.61.com/api/v1/article/likes/{article_id}/")  # 点赞
-                    data, gold = (response.json().get(key) for key in ("data", "gold"))
+                    res = session.post(f"https://mifan.61.com/api/v1/article/likes/{article_id}/")  # 点赞
+                    data, gold = [res.json().get(key) for key in ("data", "gold")]
                     session.post(f"https://mifan.61.com/api/v1/article/likes/{article_id}/", data={"cancel": 1})  # 取消点赞
                     if data == 0:
                         if gold > 0:
@@ -62,12 +62,12 @@ def main():
                 success_times = 0
                 while success_times < 10:
                     try:
-                        response = session.post("https://mifan.61.com/api/v1/article/comment", data=data, timeout=30)  # 评论
-                        response.raise_for_status()
+                        res = session.post("https://mifan.61.com/api/v1/article/comment", data=data, timeout=30)  # 评论
+                        res.raise_for_status()
                     except:
                         data["post_text"] = text.pop()
                     else:
-                        code, gold = (response.json().get(key) for key in ("code", "gold"))
+                        code, gold = [res.json().get(key) for key in ("code", "gold")]
                         if code == 200:
                             if gold > 0:
                                 success_times += 1
@@ -82,13 +82,13 @@ def main():
                     comment_id = comments.pop().get("cid")
                     session.post(f"https://mifan.61.com/api/v1/article/comment/delete/{comment_id}/")  # 删除
                 # 补签
-                response = session.post("https://mifan.61.com/api/v1/profile")  # 账号信息
-                gold = response.json().get("gold")  # 剩余米粒
+                res = session.post("https://mifan.61.com/api/v1/profile")  # 账号信息
+                gold = res.json().get("gold")  # 剩余米粒
                 complement_times = gold // 1000  # 可补签次数
                 if complement_times > 0:
                     # 获取账号最近40天未签到日期
-                    response = session.get("https://mifan.61.com/api/v1/event/dailysign/recent")  # 最近签到信息
-                    no_sign_date = [key for item in response.json().get("data") for key, value in item.items() if value == 0]
+                    res = session.get("https://mifan.61.com/api/v1/event/dailysign/recent")  # 最近签到信息
+                    no_sign_date = [key for item in res.json().get("data") for key, value in item.items() if value == 0]
                     # 获取账号补签数据的最新补签日期
                     if record_file.exists():
                         with record_file.open() as file:
@@ -111,8 +111,8 @@ def main():
                         params = {
                             "complement_date": sign_date
                         }
-                        response = session.get("https://mifan.61.com/api/v1/event/dailysign/complement", params=params)  # 补签
-                        data = response.json().get("data")
+                        res = session.get("https://mifan.61.com/api/v1/event/dailysign/complement", params=params)  # 补签
+                        data = res.json().get("data")
                         if "成功" in data:
                             success_times += 1
                         if is_plus_day:

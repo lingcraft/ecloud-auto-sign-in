@@ -1,4 +1,4 @@
 .idea
 env.py
+api.json
 *.js
-api*

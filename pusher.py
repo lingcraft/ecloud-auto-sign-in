@@ -14,7 +14,7 @@ class WeChat:
         self.way = way
         self.corp_id, self.corp_secret, self.to_user, self.agent_id, self.media_id = params
 
-    def push(self, content: str = None):
+    def push(self, content: str):
         if "失败" in content:
             title = f"{self.way}签到失败"
         else:
