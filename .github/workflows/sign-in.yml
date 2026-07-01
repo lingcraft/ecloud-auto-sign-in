@@ -22,10 +22,11 @@ jobs:
       - name: 安装环境
         uses: actions/setup-python@v6
         with:
-          python-version: 3.13
+          python-version-file: .python-version
       - name: 安装依赖
         run: |
-          pip install -r requirements.txt
+          pip install uv
+          uv sync
       - name: 摩尔庄园签到
         run: |
           python mole.py
