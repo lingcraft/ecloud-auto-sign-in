@@ -1,7 +1,8 @@
 import os, random
-from loguru import logger
 from datetime import date, timedelta
+from time import sleep
 from pathlib import Path
+from loguru import logger
 from pusher import *
 
 # 摩尔庄园米饭签到
@@ -123,6 +124,7 @@ def main():
                     latest_sign_dict[username] = next_date.isoformat()
                     with record_file.open("w") as file:
                         json.dump(latest_sign_dict, file, indent=2)
+                sleep(10)
     if success:
         pusher.push(sio.getvalue().strip())
     logger.info(sio.getvalue().strip())
