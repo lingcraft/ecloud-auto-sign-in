@@ -1,4 +1,5 @@
 from datetime import date, timedelta
+from json import dump, load
 from loguru import logger
 from os import environ
 from pathlib import Path
@@ -94,7 +95,7 @@ def main():
                     # 获取账号补签数据的最新补签日期
                     if record_file.exists():
                         with record_file.open() as file:
-                            latest_sign_dict = json.load(file)
+                            latest_sign_dict = load(file)
                     else:
                         latest_sign_dict = {}
                     next_date = date.fromisoformat(latest_sign_dict.get(username, "1970-01-01"))
@@ -124,7 +125,7 @@ def main():
                     # 记录补签数据
                     latest_sign_dict[username] = next_date.isoformat()
                     with record_file.open("w") as file:
-                        json.dump(latest_sign_dict, file, indent=2)
+                        dump(latest_sign_dict, file, indent=2)
                 sleep(10)
     if success:
         pusher.push(sio.getvalue().strip())
