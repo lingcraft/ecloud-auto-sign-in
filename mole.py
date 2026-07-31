@@ -17,7 +17,7 @@ def main():
     record_file = Path("mole.json")
     # 摩尔庄园签到
     success = False
-    for account in mole_accounts:
+    for index, account in enumerate(mole_accounts):
         with logger.catch():
             with Session() as session:
                 # 请求参数、账号信息
@@ -126,7 +126,8 @@ def main():
                     latest_sign_dict[username] = next_date.isoformat()
                     with record_file.open("w") as file:
                         dump(latest_sign_dict, file, indent=2)
-                sleep(10)
+        if index < len(mole_accounts) - 1:
+            sleep(5)
     if success:
         pusher.push(sio.getvalue().strip())
     logger.info(sio.getvalue().strip())
