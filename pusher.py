@@ -1,11 +1,13 @@
-import json, requests, io, pytz
 from datetime import datetime
-from urllib3 import Retry
+from io import StringIO
+from pytz import timezone
+from requests import get, post, Session
 from requests.adapters import HTTPAdapter
+from urllib3 import Retry
 
-sio = io.StringIO()
+sio = StringIO()
 sio.seek(0, 2)
-now = datetime.now(pytz.timezone("Asia/Shanghai")).strftime("%Y-%m-%d %H:%M:%S")
+now = datetime.now(timezone("Asia/Shanghai")).strftime("%Y-%m-%d %H:%M:%S")
 sio.write("-----------" + now + "----------\n")
 
 
@@ -23,7 +25,7 @@ class WeChat:
             return self.send_text(title, message)
 
     def get_token(self):
-        response = requests.get(
+        response = get(
             "https://qyapi.weixin.qq.com/cgi-bin/gettoken",
             params={
                 "corpid": self.corp_id,
@@ -36,7 +38,7 @@ class WeChat:
             return ""
 
     def send_text(self, title, message):
-        return requests.post(
+        return post(
             "https://qyapi.weixin.qq.com/cgi-bin/message/send",
             params={
                 "access_token": self.get_token(),
@@ -55,7 +57,7 @@ class WeChat:
     def send_news(self, title, message):
         if not message:
             message = title
-        return requests.post(
+        return post(
             "https://qyapi.weixin.qq.com/cgi-bin/message/send",
             params={
                 "access_token": self.get_token(),

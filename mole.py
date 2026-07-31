@@ -1,13 +1,14 @@
-import os, random
 from datetime import date, timedelta
-from time import sleep
-from pathlib import Path
 from loguru import logger
+from os import environ
+from pathlib import Path
 from pusher import *
+from random import sample
+from time import sleep
 
 # 摩尔庄园米饭签到
-wechat_params = os.getenv("WECHAT_PARAMS").split(",")
-mole_accounts = os.getenv("MOLE_ACCOUNTS").split("\n")
+wechat_params = environ["WECHAT_PARAMS"].split(",")
+mole_accounts = environ["MOLE_ACCOUNTS"].split("\n")
 
 
 def main():
@@ -17,7 +18,7 @@ def main():
     success = False
     for account in mole_accounts:
         with logger.catch():
-            with requests.Session() as session:
+            with Session() as session:
                 # 请求参数、账号信息
                 username, password = account.split(",")
                 params = {
@@ -54,7 +55,7 @@ def main():
                     sio.write(f"摩尔点赞提示：{username} 点赞成功，获得{success_times * 5}米粒\n")
                 # 评论10次
                 article_id = session.get("https://mifan.61.com/api/v1/article/home").json().get("data").get("current_page")[0].get("data").get("article_id")  # 个人帖子ID
-                text = random.sample(range(100), 20)
+                text = sample(range(100), 20)
                 data = {
                     "comment_article_id": article_id,
                     "post_text": text.pop(),

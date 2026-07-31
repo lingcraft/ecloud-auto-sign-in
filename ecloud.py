@@ -1,19 +1,22 @@
-import os, re, rsa, time
-from urllib.parse import urlparse, parse_qs
 from loguru import logger
+from os import environ
 from pusher import *
+from re import search
+from rsa import PublicKey, encrypt
+from time import time
+from urllib.parse import urlparse, parse_qs
 
 # 天翼云盘签到
-wechat_params = os.getenv("WECHAT_PARAMS").split(",")
-ecloud_account = os.getenv("ECLOUD_ACCOUNT").split(",")
-session = requests.Session()
+wechat_params = environ["WECHAT_PARAMS"].split(",")
+ecloud_account = environ["ECLOUD_ACCOUNT"].split(",")
+session = Session()
 set_retry(session)
 
 
 def rsa_encode(j_rsa_key, content):
     rsa_key = f"-----BEGIN PUBLIC KEY-----\n{j_rsa_key}\n-----END PUBLIC KEY-----"
-    pub_key = rsa.PublicKey.load_pkcs1_openssl_pem(rsa_key.encode())
-    return rsa.encrypt(content.encode(), pub_key).hex()
+    pub_key = PublicKey.load_pkcs1_openssl_pem(rsa_key.encode())
+    return encrypt(content.encode(), pub_key).hex()
 
 
 def login(username, password):
@@ -27,7 +30,7 @@ def login(username, password):
         },
         timeout=10
     )
-    if not (match := re.search(r"href\s*=\s*'([^']*autoLogin[^']*)'", res.text)):
+    if not (match := search(r"href\s*=\s*'([^']*autoLogin[^']*)'", res.text)):
         sio.write("未找到动态登录页\n")
         return False
     url = match.group(1)
@@ -49,7 +52,7 @@ def login(username, password):
         params=params,
         timeout=10
     )
-    if not (match := re.search(r"id=\"j_rsaKey\"\s+value=\"([^\"]+)\"", res.text)):
+    if not (match := search(r"id=\"j_rsaKey\"\s+value=\"([^\"]+)\"", res.text)):
         sio.write("获取RSA密钥失败\n")
         return False
     j_rsa_key = match.group(1)
@@ -94,7 +97,7 @@ def main():
         res = session.get(
             "https://api.cloud.189.cn/mkt/userSign.action",
             params={
-                "rand": str(round(time.time() * 1000)),
+                "rand": str(round(time() * 1000)),
                 "clientType": "TELEANDROID",
                 "version": "8.6.3",
                 "model": "SM-G930K",
