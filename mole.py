@@ -9,7 +9,7 @@ from time import sleep
 
 # 摩尔庄园米饭签到
 wechat_params = environ["WECHAT_PARAMS"].split(",")
-mole_accounts = environ["MOLE_ACCOUNTS"].split("\n")
+mole_accounts = environ["MOLE_ACCOUNTS"].split("|")
 
 
 def main():
