@@ -1,9 +1,9 @@
 name: 签到
 
 on:
-  push:
-#  schedule:
-#    - cron: 0,5 16 * * *
+#  push:
+  schedule:
+    - cron: 0,5 16 * * *
   workflow_dispatch: # workflow_dispatch 要放最后，否则会导致 schedule 失效
 
 permissions:
