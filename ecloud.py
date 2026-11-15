@@ -5,6 +5,10 @@ from re import search
 from rsa import PublicKey, encrypt
 from time import time
 from urllib.parse import urlparse, parse_qs
+try:
+    import env
+except ImportError:
+    pass
 
 # 天翼云盘签到
 wechat_params = environ["WECHAT_PARAMS"].split(",")

@@ -6,6 +6,10 @@ from pathlib import Path
 from pusher import *
 from random import sample
 from time import sleep
+try:
+    import env
+except ImportError:
+    pass
 
 # 摩尔庄园米饭签到
 wechat_params = environ["WECHAT_PARAMS"].split(",")
