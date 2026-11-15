@@ -79,7 +79,7 @@ def main():
                 # 签到
                 session.get("https://mifan.61.com/api/v1/login", params=params)  # 登录
                 res = session.get("https://mifan.61.com/api/v1/event/dailysign/")  # 签到
-                data = res.json().get("data")
+                data = res.json()["data"]
                 sio.write(f"摩尔签到提示：{username} {data}，获得24金豆\n")
                 if "成功" in data:
                     success = True
@@ -90,11 +90,11 @@ def main():
                     "count": 15,
                     "timestamp": datetime.now().timestamp()
                 }
-                article_id = session.post("https://mifan.61.com/api/v1/feed", data=data).json().get("data").get("current_page")[0].get("data").get("article_id")  # 最新帖子ID
+                article_id = session.post("https://mifan.61.com/api/v1/feed", data=data).json()["data"]["current_page"][0]["data"]["article_id"]  # 最新帖子ID
                 success_times = 0
                 while success_times < 20:
                     res = session.post(f"https://mifan.61.com/api/v1/article/likes/{article_id}/")  # 点赞
-                    data, gold = [res.json().get(key) for key in ("data", "gold")]
+                    data, gold = [res.json()[key] for key in ("data", "gold")]
                     session.post(f"https://mifan.61.com/api/v1/article/likes/{article_id}/", data={"cancel": 1})  # 取消点赞
                     if data == 0:
                         if gold > 0:
@@ -105,7 +105,7 @@ def main():
                 if success_times > 0:
                     sio.write(f"摩尔点赞提示：{username} 点赞成功，获得{success_times * 5}米粒\n")
                 # 评论10次
-                article_id = session.get("https://mifan.61.com/api/v1/article/home").json().get("data").get("current_page")[0].get("data").get("article_id")  # 个人帖子ID
+                article_id = session.get("https://mifan.61.com/api/v1/article/home").json()["data"]["current_page"][0]["data"]["article_id"]  # 个人帖子ID
                 text = sample(range(100), 20)
                 data = {
                     "comment_article_id": article_id,
@@ -120,7 +120,7 @@ def main():
                     except:
                         data["post_text"] = text.pop()
                     else:
-                        code, gold = [res.json().get(key) for key in ("code", "gold")]
+                        code, gold = [res.json()[key] for key in ("code", "gold")]
                         if code == 200:
                             if gold > 0:
                                 success_times += 1
@@ -130,18 +130,18 @@ def main():
                 if success_times > 0:
                     sio.write(f"摩尔评论提示：{username} 评论成功，获得{success_times * 5}米粒\n")
                 # 删除评论
-                comments = session.get(f"https://mifan.61.com/api/v1/article/comment/{article_id}/").json().get("data")  # 获取评论
+                comments = session.get(f"https://mifan.61.com/api/v1/article/comment/{article_id}/").json()["data"]  # 获取评论
                 while len(comments) > 0:
-                    comment_id = comments.pop().get("cid")
+                    comment_id = comments.pop()["cid"]
                     session.post(f"https://mifan.61.com/api/v1/article/comment/delete/{comment_id}/")  # 删除
                 # 补签
                 res = session.post("https://mifan.61.com/api/v1/profile")  # 账号信息
-                gold = res.json().get("gold")  # 剩余米粒
+                gold = res.json()["gold"]  # 剩余米粒
                 complement_times = gold // 1000  # 可补签次数
                 if complement_times > 0:
                     # 获取账号最近40天未签到日期
                     res = session.get("https://mifan.61.com/api/v1/event/dailysign/recent")  # 最近签到信息
-                    no_sign_date = [key for item in res.json().get("data") for key, value in item.items() if value == 0]
+                    no_sign_date = [key for item in res.json()["data"] for key, value in item.items() if value == 0]
                     # 获取账号补签数据的最新补签日期
                     next_date = date.fromisoformat(record.get(username, "1970-01-01"))
                     one_day = timedelta(days=1)
@@ -160,7 +160,7 @@ def main():
                             "complement_date": sign_date
                         }
                         res = session.get("https://mifan.61.com/api/v1/event/dailysign/complement", params=params)  # 补签
-                        data = res.json().get("data")
+                        data = res.json()["data"]
                         if "成功" in data:
                             success_times += 1
                         if is_plus_day:

@@ -46,10 +46,10 @@ def login(username, password):
         params=params,
         timeout=10
     )
-    if res.json().get("result") != "0":
+    if res.json()["result"] != "0":
         sio.write("获取登录配置失败\n")
         return False
-    lt, return_url, param_id, account_type = [res.json().get("data").get(key) for key in ("lt", "returnUrl", "paramId", "accountType")]
+    lt, return_url, param_id, account_type = [res.json()["data"][key] for key in ("lt", "returnUrl", "paramId", "accountType")]
 
     res = session.get(
         "https://open.e.189.cn/api/logbox/separate/wap/login.html",
@@ -81,11 +81,11 @@ def login(username, password):
         },
         timeout=10
     )
-    if res.json().get("result") == 0:
-        session.get(res.json().get("toUrl"), timeout=10)
+    if res.json()["result"] == 0:
+        session.get(res.json()["toUrl"], timeout=10)
         return True
     else:
-        sio.write(f"签到失败：登录出错\n错误提示：\n{res.json().get("msg")}\n")
+        sio.write(f"签到失败：登录出错\n错误提示：\n{res.json()["msg"]}\n")
         return False
 
 
@@ -115,9 +115,9 @@ def main():
         )
         res.raise_for_status()
         # 签到
-        is_success = not res.json().get("isSign")
+        is_success = not res.json()["isSign"]
         tip = "签到成功" if is_success else "已签到"
-        bonus = res.json().get("netdiskBonus")
+        bonus = res.json()["netdiskBonus"]
         sio.write(f"签到提示：{tip}，获得{bonus}M空间\n")
     if is_success:
         pusher.push(sio.getvalue().strip())
