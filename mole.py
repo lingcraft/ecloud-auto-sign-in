@@ -1,10 +1,11 @@
+from base64 import b64decode, b64encode
 from datetime import date, timedelta
-from json import dump, load
+from json import dumps, loads
 from loguru import logger
 from os import environ
-from pathlib import Path
 from pusher import *
 from random import sample
+from requests import get, put
 from time import sleep
 try:
     import env
@@ -16,9 +17,54 @@ wechat_params = environ["WECHAT_PARAMS"].split(",")
 mole_accounts = environ["MOLE_ACCOUNTS"].split("|")
 
 
+def pull_record():
+    """读取仓库里的 mole.json，返回 (记录, 文件 sha)。"""
+    res = get(
+        "https://api.github.com/repos/lingcraft/ecloud-auto-sign-in/contents/mole.json",
+        headers={
+            "Authorization": f"Bearer {environ["GITHUB_TOKEN"]}",
+            "Accept": "application/vnd.github+json",
+        },
+        params={"ref": "master"},
+        timeout=30
+    )
+    res.raise_for_status()
+    body = res.json()
+    return loads(b64decode(body["content"])), body["sha"]
+
+
+def push_record(record, sha):
+    """写回 mole.json，返回新的 sha。"""
+    res = put(
+        "https://api.github.com/repos/lingcraft/ecloud-auto-sign-in/contents/mole.json",
+        headers={
+            "Authorization": f"Bearer {environ["GITHUB_TOKEN"]}",
+            "Accept": "application/vnd.github+json",
+        },
+        timeout=30,
+        json={
+            "message": "更新补签数据",
+            "content": b64encode(dumps(record, indent=2, ensure_ascii=False).encode()).decode(),
+            "branch": "master",
+            "sha": sha,
+            "author": {
+                "name": "github-actions[bot]",
+                "email": "41898282+github-actions[bot]@users.noreply.github.com",
+            },
+            "committer": {
+                "name": "github-actions[bot]",
+                "email": "41898282+github-actions[bot]@users.noreply.github.com",
+            },
+        },
+    )
+    res.raise_for_status()
+    return res.json()["content"]["sha"]
+
+
 def main():
     pusher = WeChat("摩尔庄园", wechat_params)
-    record_file = Path("mole.json")
+    record, sha = pull_record()
+    before = dict(record)
     # 摩尔庄园签到
     success = False
     for index, account in enumerate(mole_accounts):
@@ -97,12 +143,7 @@ def main():
                     res = session.get("https://mifan.61.com/api/v1/event/dailysign/recent")  # 最近签到信息
                     no_sign_date = [key for item in res.json().get("data") for key, value in item.items() if value == 0]
                     # 获取账号补签数据的最新补签日期
-                    if record_file.exists():
-                        with record_file.open() as file:
-                            latest_sign_dict = load(file)
-                    else:
-                        latest_sign_dict = {}
-                    next_date = date.fromisoformat(latest_sign_dict.get(username, "1970-01-01"))
+                    next_date = date.fromisoformat(record.get(username, "1970-01-01"))
                     one_day = timedelta(days=1)
                     success_times = 0
                     # 开始补签
@@ -127,11 +168,12 @@ def main():
                     if success_times > 0:
                         sio.write(f"摩尔补签提示：{username} {data}，获得{success_times * 24}金豆\n")
                     # 记录补签数据
-                    latest_sign_dict[username] = next_date.isoformat()
-                    with record_file.open("w") as file:
-                        dump(latest_sign_dict, file, indent=2)
+                    record[username] = next_date.isoformat()
         if index < len(mole_accounts) - 1:
             sleep(5)
+    # 更新补签数据
+    if record != before:
+        push_record(record, sha)
     if success:
         pusher.push(sio.getvalue().strip())
     logger.info(sio.getvalue().strip())
